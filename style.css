@@ -1,0 +1,1608 @@
+/* Add to the top of your style.css */
+:root {
+  --primary-blue: #007bff;
+  --secondary-blue: #0056b3;
+  --light-blue: #e3f2fd;
+  --dark-text: #2c3e50;
+  --light-text: #7f8c8d;
+  --background-color: #f8f9fa;
+  --card-background: #fff;
+  --border-color: #e0e0e0;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--dark-text);
+    /* ... other properties */
+}
+/* ... then update all colors to use these variables */
+.logo {
+    color: var(--primary-blue);
+}
+.btn-get-started {
+    background-color: var(--primary-blue);
+    color: #fff;
+}
+
+/* General Body and Typography */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7f9;
+    color: #333;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* --- Header & Navigation --- */
+.main-header {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+}
+
+.logo {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #007bff;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links a {
+    color: #555;
+    font-weight: 600;
+    transition: color 0.3s;
+}
+
+.nav-links a:hover, .nav-links a.active {
+    color: #007bff;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 1rem;
+}
+.feature-card, .feature-card-v2, .team-member-card, .impact-card, .value-card, .process-features-list {
+    transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+}
+.feature-card:hover, .feature-card-v2:hover, .team-member-card:hover, .impact-card:hover, .value-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+}
+html {
+    scroll-behavior: smooth;
+}
+.btn-cta-primary:hover, .btn-get-started:hover, .btn-login:hover {
+    transform: translateY(-2px);
+}
+
+
+
+/* --- Buttons --- */
+.btn {
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: 600;
+    transition: background-color 0.3s, color 0.3s;
+    cursor: pointer;
+}
+
+.btn-sign-in {
+    color: #007bff;
+    border: 1px solid #007bff;
+}
+
+.btn-sign-in:hover {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.btn-get-started {
+    background-color: #007bff;
+    color: #fff;
+    border: 1px solid #007bff;
+}
+
+.btn-get-started:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.btn-primary {
+    background-color: #e3f2fd;
+    color: #007bff;
+    border: 1px solid #e3f2fd;
+    padding: 12px 25px;
+}
+.btn-primary:hover {
+    background-color: #d1e7fd;
+}
+
+.btn-secondary {
+    background-color: #fff;
+    color: #007bff;
+    border: 1px solid #ddd;
+    padding: 12px 25px;
+}
+.btn-secondary:hover {
+    background-color: #f9f9f9;
+}
+
+
+
+/* --- Hero Section --- */
+.hero-section {
+    background: linear-gradient(to bottom, #e3f2fd, #bbdefb);
+    color: #333;
+    text-align: center;
+    padding: 120px 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://source.unsplash.com/1600x900/?people,office,teamwork') no-repeat center center/cover;
+    opacity: 0.1;
+    z-index: -1;
+}
+
+.hero-content h1 {
+    font-size: 3.5rem;
+    margin: 0 0 1rem;
+    font-weight: 700;
+}
+
+.hero-content p {
+    font-size: 1.25rem;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    color: #555;
+}
+
+.hero-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+/* --- Stats & Features Section --- */
+.stats-section {
+    padding: 60px 0;
+    text-align: center;
+}
+
+.stats-grid {
+    display: flex;
+    justify-content: space-around;
+    padding: 40px 0;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 40px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #007bff;
+    display: block;
+}
+
+.stat-text {
+    font-size: 1rem;
+    color: #555;
+    margin-top: 0.5rem;
+}
+
+.why-choose-section {
+    padding: 40px 0;
+}
+
+.why-choose-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.why-choose-section .subtitle {
+    font-size: 1.1rem;
+    color: #555;
+    max-width: 700px;
+    margin: 0 auto 3rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.feature-card {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+.feature-card h3 {
+    color: #333;
+    margin-top: 1rem;
+}
+
+.icon-placeholder {
+    width: 60px;
+    height: 60px;
+    background-color: #e3f2fd;
+    border-radius: 50%;
+    margin: 0 auto;
+}
+
+/* --- Footer --- */
+.main-footer {
+    background-color: #fff;
+}
+
+.footer-cta-section {
+    text-align: center;
+    background-color: #e9ecef;
+    padding: 4rem 20px;
+}
+
+.footer-cta-section h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.footer-cta-section p {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 2rem;
+}
+
+.footer-cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.footer-links-section {
+    padding: 3rem 20px;
+}
+
+.footer-columns {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.footer-col {
+    flex: 1;
+    min-width: 200px;
+}
+
+.footer-col h4 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.footer-col p {
+    font-size: 0.9rem;
+    color: #777;
+    line-height: 1.6;
+}
+
+.footer-col ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-col ul li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-col ul li a {
+    color: #555;
+    transition: color 0.3s;
+}
+
+.footer-col ul li a:hover {
+    color: #007bff;
+}
+
+.copyright {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #777;
+    margin-top: 2rem;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 2rem 0;
+}
+/* General Body and Typography */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7f9;
+    color: #333;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* --- Header & Navigation --- */
+.main-header {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+}
+
+.logo {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #007bff;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links a {
+    color: #555;
+    font-weight: 600;
+    transition: color 0.3s;
+}
+
+.nav-links a:hover, .nav-links a.active {
+    color: #007bff;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+/* --- Buttons --- */
+.btn {
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: 600;
+    transition: background-color 0.3s, color 0.3s;
+    cursor: pointer;
+}
+
+.btn-sign-in {
+    color: #007bff;
+    border: 1px solid #007bff;
+}
+
+.btn-sign-in:hover {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.btn-get-started {
+    background-color: #007bff;
+    color: #fff;
+    border: 1px solid #007bff;
+}
+
+.btn-get-started:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+/* Specific buttons for the For Job Seekers page */
+.btn-cta-primary { /* Matches the blue gradient button */
+    background: linear-gradient(to right, #007bff, #00c6ff);
+    color: #fff;
+    border: none;
+    padding: 12px 25px;
+    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3);
+}
+
+.btn-cta-primary:hover {
+    opacity: 0.9;
+}
+
+.btn-cta-secondary { /* Matches the white button */
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ddd;
+    padding: 12px 25px;
+}
+
+.btn-cta-secondary:hover {
+    background-color: #f0f0f0;
+}
+
+.btn-get-started-large { /* For the mid-page CTA */
+    background: linear-gradient(to right, #00c6ff, #007bff); /* Adjusted gradient direction slightly */
+    color: #fff;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    box-shadow: 0 6px 10px rgba(0, 123, 255, 0.4);
+}
+
+.btn-get-started-large:hover {
+    opacity: 0.9;
+    box-shadow: 0 8px 15px rgba(0, 123, 255, 0.5);
+}
+
+
+/* --- Hero Section (Landing Page) --- */
+.hero-section {
+    background: linear-gradient(to bottom, #e3f2fd, #bbdefb);
+    color: #333;
+    text-align: center;
+    padding: 120px 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://source.unsplash.com/1600x900/?people,office,teamwork') no-repeat center center/cover;
+    opacity: 0.1;
+    z-index: -1;
+}
+
+.hero-content h1 {
+    font-size: 3.5rem;
+    margin: 0 0 1rem;
+    font-weight: 700;
+}
+
+.hero-content p {
+    font-size: 1.25rem;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    color: #555;
+}
+
+.hero-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+/* --- Stats & Features Section (Landing Page) --- */
+.stats-section {
+    padding: 60px 0;
+    text-align: center;
+    background-color: #fcfcfc;
+}
+
+.stats-grid {
+    display: flex;
+    justify-content: space-around;
+    padding: 40px 0;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 40px;
+    flex-wrap: wrap; /* Added for responsiveness */
+    gap: 20px; /* Added for spacing on smaller screens */
+}
+
+.stat-item {
+    text-align: center;
+    flex: 1 1 200px; /* Added for responsiveness */
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #007bff;
+    display: block;
+}
+
+.stat-text {
+    font-size: 1rem;
+    color: #555;
+    margin-top: 0.5rem;
+}
+
+.why-choose-section {
+    padding: 40px 0;
+}
+
+.why-choose-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.why-choose-section .subtitle {
+    font-size: 1.1rem;
+    color: #555;
+    max-width: 700px;
+    margin: 0 auto 3rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.feature-card {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+.feature-card h3 {
+    color: #333;
+    margin-top: 1rem;
+}
+
+.icon-placeholder {
+    width: 60px;
+    height: 60px;
+    background-color: #e3f2fd;
+    border-radius: 50%;
+    margin: 0 auto;
+    /* You would replace this with actual icon images or SVG */
+}
+
+/* --- Job Seeker Specific Hero Section (`for_job_seekers.html`) --- */
+.job-seeker-hero {
+    background-color: #fff;
+    padding: 80px 0;
+    text-align: left;
+}
+
+.job-seeker-hero .hero-content-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+.job-seeker-hero .hero-text-content {
+    flex: 1;
+    min-width: 350px; /* Ensure text content doesn't get too small */
+}
+
+.job-seeker-hero .hero-text-content h1 {
+    font-size: 3.2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.job-seeker-hero .hero-text-content .highlight {
+    color: #007bff;
+}
+
+.job-seeker-hero .hero-text-content p {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 2rem;
+}
+
+.job-seeker-hero .hero-actions {
+    justify-content: flex-start; /* Align buttons to the left */
+}
+
+.job-seeker-hero .hero-image-content {
+    flex: 1;
+    min-width: 300px; /* Ensure image content doesn't get too small */
+    text-align: center; /* Center image if it takes full width */
+}
+
+.job-seeker-hero .responsive-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+/* --- Mid-Page Call to Action (`for_job_seekers.html`) --- */
+.mid-page-cta {
+    background: linear-gradient(to right, #007bff, #00c6ff);
+    color: #fff;
+    text-align: center;
+    padding: 60px 20px;
+    margin: 40px 0;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.mid-page-cta h2 {
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
+}
+
+.mid-page-cta p {
+    font-size: 1.1rem;
+    max-width: 700px;
+    margin: 0 auto 2rem;
+}
+
+
+/* --- Footer (Common to all pages) --- */
+.main-footer {
+    background-color: #fff;
+    padding-top: 3rem; /* Adjusted to remove the top blue section */
+}
+
+.footer-links-section {
+    padding: 0 20px 3rem; /* Adjusted padding */
+}
+
+.footer-columns {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.footer-col {
+    flex: 1;
+    min-width: 200px;
+}
+
+.footer-col h4 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.footer-col p {
+    font-size: 0.9rem;
+    color: #777;
+    line-height: 1.6;
+}
+
+.footer-col ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-col ul li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-col ul li a {
+    color: #555;
+    transition: color 0.3s;
+}
+
+.footer-col ul li a:hover {
+    color: #007bff;
+}
+
+.copyright {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #777;
+    margin-top: 2rem;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 2rem 0;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .hero-content h1 {
+        font-size: 2.5rem;
+    }
+    .hero-content p {
+        font-size: 1rem;
+    }
+    .hero-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    .stats-grid {
+        flex-direction: column;
+        align-items: center;
+    }
+    .footer-columns {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .job-seeker-hero .hero-content-wrapper {
+        flex-direction: column;
+        text-align: center;
+    }
+    .job-seeker-hero .hero-actions {
+        justify-content: center;
+        flex-direction: column;
+    }
+    .job-seeker-hero .hero-text-content h1 {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar {
+        padding: 1rem;
+    }
+    .logo {
+        font-size: 1.2rem;
+    }
+    .btn {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+    .hero-section {
+        padding: 80px 10px;
+    }
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+    .hero-content p {
+        font-size: 0.9rem;
+    }
+    .stat-number {
+        font-size: 2rem;
+    }
+    .why-choose-section h2, .mid-page-cta h2 {
+        font-size: 1.8rem;
+    }
+}
+/* --- New Recruiter Hero Section --- */
+.recruiter-hero-section {
+    background-color: #fff;
+    padding: 80px 0;
+    text-align: left;
+}
+
+.recruiter-hero-section .hero-content-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+}
+
+.recruiter-hero-section .hero-text-content {
+    flex: 1;
+    min-width: 350px;
+}
+
+.recruiter-hero-section .hero-text-content h1 {
+    font-size: 3.2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.recruiter-hero-section .hero-text-content .highlight {
+    color: #007bff;
+}
+
+.recruiter-hero-section .hero-text-content p {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 2rem;
+}
+
+.recruiter-hero-section .hero-actions {
+    justify-content: flex-start;
+}
+
+.recruiter-hero-section .hero-image-content {
+    flex: 1;
+    min-width: 300px;
+    text-align: center;
+}
+
+.recruiter-hero-section .responsive-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+/* --- New Recruiter Stats & Features Section --- */
+.recruiter-stats-section {
+    padding: 60px 0;
+    text-align: center;
+}
+
+.stats-heading {
+    margin-bottom: 40px;
+}
+
+.stats-heading h2 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.stats-heading p {
+    font-size: 1.1rem;
+    color: #555;
+}
+
+.recruiter-stats-grid {
+    display: flex;
+    justify-content: space-around;
+    padding-bottom: 40px;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.recruiter-features-section {
+    padding-top: 40px;
+}
+
+.recruiter-features-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.recruiter-features-section .subtitle {
+    font-size: 1.1rem;
+    color: #555;
+    max-width: 700px;
+    margin: 0 auto 3rem;
+}
+
+.features-grid-v2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.feature-card-v2 {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    text-align: left;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.feature-card-v2:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+.feature-card-v2 h3 {
+    color: #333;
+    margin-top: 1rem;
+}
+
+/* --- Recruitment Made Simple Section --- */
+.recruitment-process-section {
+    padding: 80px 0;
+    background-color: #f9f9f9;
+}
+
+.recruitment-process-section .container {
+    display: flex;
+    gap: 3rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.process-text {
+    flex: 1;
+    min-width: 400px;
+}
+
+.process-text h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.process-text p {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 2rem;
+}
+
+.process-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.step-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    background-color: #007bff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.step-item h4 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.step-item p {
+    margin: 0;
+    font-size: 1rem;
+    color: #555;
+}
+
+.process-features-list {
+    flex: 1;
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.process-features-list h2 {
+    font-size: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+}
+
+.process-features-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.process-features-list ul li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.list-icon {
+    font-size: 1.2rem;
+}
+
+/* --- New Recruiter Mid-Page CTA --- */
+.recruiter-mid-page-cta {
+    background: linear-gradient(to right, #00c6ff, #007bff);
+    color: #fff;
+    text-align: center;
+    padding: 60px 20px;
+    margin-top: 40px;
+}
+
+.recruiter-mid-page-cta h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.recruiter-mid-page-cta p {
+    font-size: 1.1rem;
+    max-width: 700px;
+    margin: 0 auto 2rem;
+    color: #fff;
+}
+
+.recruiter-mid-page-cta .cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+/* --- General Button Styles (Updated) --- */
+.btn-cta-primary {
+    background: linear-gradient(to right, #007bff, #00c6ff);
+    color: #fff;
+    border: none;
+    padding: 12px 25px;
+    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3);
+}
+
+.btn-cta-secondary {
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ddd;
+    padding: 12px 25px;
+}
+/* --- About Us Page Styles (Enhanced) --- */
+
+/* --- Intro Section --- */
+.about-intro-section {
+    padding: 100px 20px;
+    text-align: center;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%);
+    color: #333;
+}
+
+.about-intro-section h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color: #007bff;
+}
+
+.about-intro-section h1::after {
+    content: '';
+    display: block;
+    width: 70px;
+    height: 4px;
+    background: #007bff;
+    margin: 10px auto 0;
+    border-radius: 2px;
+}
+
+.about-intro-section p {
+    font-size: 1.2rem;
+    max-width: 850px;
+    margin: 1rem auto 2rem;
+    line-height: 1.7;
+}
+
+/* --- Mission & Impact Section --- */
+.mission-section {
+    padding: 80px 20px;
+    background-color: #f4f7f9;
+}
+
+.mission-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3rem;
+    align-items: flex-start;
+}
+
+.mission-text {
+    flex: 2;
+    min-width: 300px;
+}
+
+.mission-text h2 {
+    font-size: 2.8rem;
+    margin-bottom: 1rem;
+    color: #007bff;
+}
+
+.mission-text p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+}
+
+.impact-card {
+    flex: 1;
+    min-width: 250px;
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    border-top: 5px solid #007bff;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.impact-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+.impact-card h3 {
+    font-size: 1.6rem;
+    margin-bottom: 0.8rem;
+    color: #007bff;
+}
+
+.impact-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 1rem;
+}
+
+.impact-stat-item .stat-number {
+    font-size: 2rem;
+    color: #007bff;
+    font-weight: 700;
+}
+
+.impact-stat-item .stat-text {
+    font-size: 0.95rem;
+    margin-top: 0.2rem;
+}
+
+/* --- Values Section --- */
+.values-section {
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.values-section h2 {
+    font-size: 2.8rem;
+    margin-bottom: 1rem;
+    color: #007bff;
+}
+
+.values-section .subtitle {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 3rem;
+}
+
+.values-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2rem;
+}
+
+.value-card {
+    background-color: #fff;
+    padding: 2.5rem 2rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+}
+
+.value-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+}
+
+.value-card h4 {
+    font-size: 1.4rem;
+    margin-top: 1rem;
+    color: #007bff;
+}
+
+.value-card p {
+    font-size: 1rem;
+    color: #555;
+    line-height: 1.7;
+    margin-top: 0.5rem;
+}
+
+.icon-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    background-color: #e3f2fd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    color: #007bff;
+    transition: background 0.3s, color 0.3s;
+}
+
+.value-card:hover .icon-placeholder {
+    background-color: #007bff;
+    color: #fff;
+}
+
+/* --- Team Section --- */
+.team-section {
+    padding: 80px 20px;
+    text-align: center;
+    background-color: #f4f7f9;
+}
+
+.team-section h2 {
+    font-size: 2.8rem;
+    margin-bottom: 1rem;
+    color: #007bff;
+}
+
+.team-section .subtitle {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 3rem;
+}
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2rem;
+}
+
+.team-member-card {
+    background-color: #fff;
+    padding: 2.5rem 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.team-member-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+}
+
+.team-member-card h3 {
+    margin-top: 1rem;
+    margin-bottom: 0.2rem;
+}
+
+.team-member-card .title {
+    color: #007bff;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.team-member-card .bio {
+    font-size: 0.95rem;
+    color: #555;
+    line-height: 1.6;
+}
+
+.team-icon-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.team-member-card:hover .team-icon-placeholder {
+    transform: scale(1.05);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+/* --- Login Page Styles --- */
+.login-page {
+    background-color: #f4f7f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+}
+
+.login-box {
+    background-color: #fff;
+    padding: 3rem 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.login-title {
+    text-align: center;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: #333;
+}
+
+.tab-container {
+    display: flex;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 0;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #555;
+    position: relative;
+    transition: color 0.3s;
+}
+
+.tab-btn:hover {
+    color: #007bff;
+}
+
+.tab-btn.active {
+    color: #007bff;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #007bff;
+}
+
+.login-form {
+    display: none;
+}
+
+.login-form.active {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #555;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(to right, #007bff, #00c6ff);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.btn-login:hover {
+    opacity: 0.9;
+/* --- Register Page Specific Styles --- */
+.login-page {
+    background: linear-gradient(to right, #00c6ff, #007bff);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+}
+
+.login-box {
+    background-color: #fff;
+    padding: 3rem 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.login-title {
+    text-align: center;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.register-subtitle {
+    text-align: center;
+    color: #777;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+}
+
+.register-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.register-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #555;
+}
+
+.register-form input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.register-form input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+.account-type-selector {
+    margin-bottom: 2rem;
+}
+
+.radio-group {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 1.5rem;
+    cursor: pointer;
+}
+
+.radio-group input[type="radio"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    background-color: #f9f9f9;
+    position: relative;
+    transition: border-color 0.3s, background-color 0.3s;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+.radio-group input[type="radio"]:checked {
+    border-color: #007bff;
+    background-color: #fff;
+}
+
+.radio-group input[type="radio"]:checked::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #007bff;
+}
+
+.radio-group label {
+    font-weight: normal;
+    font-size: 1rem;
+    color: #555;
+    cursor: pointer;
+    margin: 0;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(to right, #007bff, #00c6ff);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.3s;
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+.btn-login:hover {
+    opacity: 0.9;
+}
+
+.form-links {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.form-links a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.form-links a:hover {
+    text-decoration: underline;
+}

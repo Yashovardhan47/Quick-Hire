@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Job Seekers - Quick Hire</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Extra styling for resume upload display */
+        #resume-file-name {
+            margin-top: 10px;
+            font-weight: 500;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+<header class="main-header">
+    <nav class="navbar">
+        <div class="logo">Quick Hire</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="for_job_seekers.html" class="active">For Job Seekers</a></li>
+            <li><a href="for_recruiters.html">For Recruiters</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+        </ul>
+        <div class="auth-buttons">
+            <a href="jobseeker_login.html" class="btn btn-sign-in">Sign In</a>
+            <a href="jobseeker_register.html" class="btn btn-get-started" id="getStartedBtn">Get Started</a>
+        </div>
+    </nav>
+</header>
+
+<main>
+    <!-- HERO SECTION -->
+    <section class="job-seeker-hero">
+        <div class="container hero-content-wrapper">
+            <div class="hero-text-content">
+                <h1>Find Your Perfect <br> <span class="highlight">Dream Job</span></h1>
+                <p>Take control of your career with our comprehensive job search platform. Track applications, discover opportunities, and land your next role faster.</p>
+                <div class="hero-actions">
+                    <a href="jobseeker_register.html" class="btn btn-cta-primary">Start Your Job Search</a>
+
+                    <!-- ✅ Upload Resume Button -->
+                    <!-- <button id="uploadResumeBtn" class="btn btn-cta-secondary">Upload Your Resume</button>
+                    <input type="file" id="resumeInput" accept=".pdf,.doc,.docx" style="display:none;">
+                    <p id="resume-file-name"></p> -->
+                </div>
+            </div>
+            <div class="hero-image-content">
+                <img src="job seekers.jpg" alt="Woman working on laptop" class="responsive-image">
+            </div>
+        </div>
+    </section>
+
+    <!-- ✨ NEW SECTION: How Quick Hire Empowers You -->
+    <section class="why-choose-section" style="padding: 60px 20px; background: #f9f9f9; text-align: center;">
+        <div class="container">
+            <h2>How Quick Hire Empowers You</h2>
+            <p class="subtitle" style="max-width:700px; margin:10px auto;">
+                We simplify every step of your job search journey — from creating a profile to landing your dream offer.
+            </p>
+
+            <div class="features-grid" style="margin-top: 30px;">
+                <div class="feature-card">
+                    <h3>🎯 Smart Recommendations</h3>
+                    <p>Get job suggestions that match your skills, location, and preferences — no endless scrolling.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📩 One-Click Apply</h3>
+                    <p>Save time with our fast-apply system — your resume goes directly to top employers.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📈 Career Insights</h3>
+                    <p>Track your progress, see trending skills, and get tips to strengthen your profile visibility.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ⭐ NEW MINI SECTION: Success Stories -->
+    <section class="testimonial-section" style="text-align:center; background:#fff; padding:50px 20px;">
+        <div class="container">
+            <h2>Success Stories</h2>
+            <p style="font-style:italic; max-width:700px; margin:15px auto;">
+                “Within just 10 days of joining Quick Hire, I landed interviews with three top companies. The smart matching feature really works!”  
+                <br>— <strong>Rahul Mehta</strong>, Data Analyst at CloudFin
+            </p>
+        </div>
+    </section>
+
+    <!-- MID PAGE CTA -->
+    <section class="mid-page-cta">
+        <div class="container">
+            <h2>Ready to Land Your Dream Job?</h2>
+            <p>Join thousands of successful professionals who found their perfect role through Quick Hire</p>
+            <a href="#" class="btn btn-get-started-large">Get Started - It's Free</a>
+        </div>
+    </section>
+</main>
+
+<footer class="main-footer">
+    <div class="footer-links-section">
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-col footer-logo">
+                    <div class="logo">Quick Hire</div>
+                    <p>Connecting talent with opportunity through personalized job matching and efficient recruitment.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Platform</h4>
+                    <ul>
+                        <li><a href="#">For Job Seekers</a></li>
+                        <li><a href="#">For Recruiters</a></li>
+                        <li><a href="#">About Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Get in Touch</h4>
+                    <p>Ready to transform your hiring? Contact us today to get started.</p>
+                </div>
+            </div>
+            <hr>
+            <p class="copyright">&copy; 2025 Quick Hire. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- ✅ Script for Upload Resume -->
+<script>
+    const uploadBtn = document.getElementById("uploadResumeBtn");
+    const resumeInput = document.getElementById("resumeInput");
+    const fileNameDisplay = document.getElementById("resume-file-name");
+
+    uploadBtn.addEventListener("click", () => {
+        resumeInput.click();
+    });
+
+    resumeInput.addEventListener("change", () => {
+        const file = resumeInput.files[0];
+        if (file) {
+            fileNameDisplay.textContent = "Uploaded: " + file.name;
+        } else {
+            fileNameDisplay.textContent = "";
+        }
+    });
+</script>
+
+</body>
+</html>

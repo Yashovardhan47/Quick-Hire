@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile - Quick Hire</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Poppins', sans-serif; margin: 0; background-color: #f5f7fa; color: #333; }
+  header { background-color: #004aad; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+  header .logo { font-size: 1.5rem; font-weight: 700; }
+  .container { max-width: 900px; margin: 30px auto; background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 3px 12px rgba(0,0,0,0.1); }
+  .profile-header { display: flex; gap: 20px; align-items: center; margin-bottom: 20px; }
+  .profile-picture-container { position: relative; text-align: center; }
+  .profile-picture-container img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #004aad; }
+  .profile-picture-container label { margin-top: 10px; display: inline-block; background: #004aad; color: white; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+  .profile-info { flex: 1; }
+  .profile-info h2 { margin: 0; font-size: 1.8rem; }
+  .profile-info p { margin: 4px 0; color: #555; }
+  .profile-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 50px;  
+  row-gap: 25px;    
+  margin-top: 20px;
+}
+.profile-fields > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+  .profile-fields label { font-weight: 600; display: block; margin-bottom: 5px; }
+  .profile-fields input, .profile-fields textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; outline: none; }
+  .profile-fields textarea { resize: vertical; min-height: 60px; }
+  .section { margin-top: 30px; }
+  .section h3 { border-bottom: 2px solid #004aad; padding-bottom: 5px; margin-bottom: 15px; }
+  .skills-list span { display: inline-block; background: #eaf2ff; color: #004aad; padding: 5px 12px; border-radius: 20px; margin: 5px 5px 0 0; font-size: 0.9rem; position: relative; }
+  .skills-list span .remove-skill { margin-left: 8px; cursor: pointer; color: red; font-weight: bold; }
+  .actions { margin-top: 25px; text-align: right; }
+  .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-left: 10px; }
+  .btn-edit { background: #004aad; color: #fff; }
+  .btn-edit:hover { background: #003a84; }
+  .btn-save { background: #28a745; color: #fff; }
+  .btn-save:hover { background: #1e7e34; }
+  .btn-cancel { background: #dc3545; color: #fff; }
+  .btn-cancel:hover { background: #a71d2a; }
+  input[readonly], textarea[readonly] { background-color: #f0f0f0; border-color: #ddd; }
+  @media(max-width:768px){ .profile-fields { grid-template-columns: 1fr; } .profile-header { flex-direction: column; text-align: center; gap: 15px; } }
+
+  /* header button */
+  .header-btn { background: #ffffff; color: #004aad; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-weight: 600; }
+  .header-btn:hover { background: #eaf2ff; }
+
+  /* ==== Resume Upload Section ==== */
+  .resume-section { margin-top: 40px; border-top: 2px solid #e0e0e0; padding-top: 20px; }
+  .resume-section h3 { border: none; margin-bottom: 15px; color: #004aad; }
+  .upload-btn { background: #004aad; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+  .upload-btn:hover { background: #003a84; }
+  #resumeName { margin-top: 10px; color: #333; }
+  #viewResume { display: inline-block; margin-top: 5px; color: #004aad; font-weight: 600; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Quick Hire</div>
+  <a href="job_seeker_dashboard.html" class="header-btn">Dashboard</a>
+</header>
+
+<div class="container">
+
+  <!-- Profile Header -->
+  <div class="profile-header">
+    <div class="profile-picture-container">
+      <img src="jobseeker_profile_image.php" id="profileImage" alt="Profile Picture">
+      <form id="photoForm" action="upload_jobseeker_photo.php" method="POST" enctype="multipart/form-data">
+        <label for="imageUpload">Change Photo</label>
+        <input type="file" id="imageUpload" name="profile_photo" accept="image/*" style="display:none;">
+      </form>
+    </div>
+    <div class="profile-info">
+      <h2 id="profileName">Nithish Kumar</h2>
+      <p id="profileDesignation">Frontend Developer</p>
+      <p id="profileLocation">Bangalore, India</p>
+      <p id="profileBio">Passionate about building interactive web applications and improving user experiences.</p>
+    </div>
+  </div>
+
+  <!-- Personal Info -->
+  <div class="section">
+    <h3>Personal Info</h3>
+    <div class="profile-fields">
+      <div>
+        <label for="name">Full Name</label>
+        <input type="text" id="name" value="Nithish Kumar" readonly>
+      </div>
+      <div>
+        <label for="dob">Date of Birth</label>
+        <input type="date" id="dob" value="2000-01-01" readonly>
+      </div>
+      <div>
+        <label for="designation">Designation</label>
+        <input type="text" id="designation" value="Frontend Developer" readonly>
+      </div>
+      <div>
+        <label for="location">Location</label>
+        <input type="text" id="location" value="Bangalore, India" readonly>
+      </div>
+      <div style="grid-column:1 / -1;">
+        <label for="shortBio">Short Bio</label>
+        <textarea id="shortBio" readonly>Passionate about building interactive web applications and improving user experiences.</textarea>
+      </div>
+      <div>
+        <label for="email">Email</label>
+        <input type="email" id="email" value="nithish@example.com" readonly>
+      </div>
+      <div>
+        <label for="phone">Phone</label>
+        <input type="text" id="phone" value="+91 9876543210" readonly>
+      </div>
+      <div>
+        <label for="github">GitHub</label>
+        <input type="text" id="github" value="github.com/nithish" readonly>
+      </div>
+      <div>
+        <label for="website">Website</label>
+        <input type="text" id="website" value="www.nithishportfolio.com" readonly>
+      </div>
+    </div>
+  </div>
+
+  <!-- Work Experience -->
+  <div class="section">
+    <h3>Work Experience</h3>
+    <div class="profile-fields">
+      <div>
+        <label for="experience1">Company & Role</label>
+        <input type="text" id="experience1" value="TechNova - Frontend Developer" readonly>
+      </div>
+      <div>
+        <label for="duration1">Duration</label>
+        <input type="text" id="duration1" value="Jan 2023 - Present" readonly>
+      </div>
+      <div>
+        <label for="experience2">Company & Role</label>
+        <input type="text" id="experience2" value="InnoSoft - Web Developer Intern" readonly>
+      </div>
+      <div>
+        <label for="duration2">Duration</label>
+        <input type="text" id="duration2" value="Jun 2022 - Dec 2022" readonly>
+      </div>
+    </div>
+  </div>
+
+  <!-- Education -->
+  <div class="section">
+    <h3>Education</h3>
+    <div class="profile-fields">
+      <div>
+        <label for="edu1">Institution & Degree</label>
+        <input type="text" id="edu1" value="B.Tech - Computer Science, XYZ University" readonly>
+      </div>
+      <div>
+        <label for="eduDuration1">Duration</label>
+        <input type="text" id="eduDuration1" value="2019 - 2023" readonly>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skills -->
+  <div class="section">
+    <h3>Skills</h3>
+    <div>
+      <input type="text" id="newSkillInput" placeholder="Add a skill" style="padding:8px; width:200px;">
+      <button onclick="addSkill()" style="padding:8px 12px; margin-left:5px;">Add</button>
+    </div>
+    <div class="skills-list" id="skillsList">
+      <span>HTML <span class="remove-skill" onclick="removeSkill(this)">x</span></span>
+      <span>CSS <span class="remove-skill" onclick="removeSkill(this)">x</span></span>
+      <span>JavaScript <span class="remove-skill" onclick="removeSkill(this)">x</span></span>
+      <span>React <span class="remove-skill" onclick="removeSkill(this)">x</span></span>
+    </div>
+  </div>
+
+  <!-- Additional Information -->
+  <div class="section">
+    <h3>Additional Information</h3>
+    <div class="profile-fields">
+      <div>
+        <label for="languages">Languages</label>
+        <input type="text" id="languages" value="English, Hindi" readonly>
+      </div>
+      <div>
+        <label for="hobbies">Hobbies</label>
+        <input type="text" id="hobbies" value="Reading, Coding, Traveling" readonly>
+      </div>
+      <div style="grid-column:1 / -1;">
+        <label for="about">About Me</label>
+        <textarea id="about" readonly>I am passionate about software development and continuously learning new technologies.</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Resume Upload Section ===== -->
+  <div class="resume-section">
+    <h3>Resume Upload</h3>
+    <button class="upload-btn" id="uploadResumeBtn">Upload Resume</button>
+    <input type="file" id="resumeInput" accept=".pdf,.doc,.docx" style="display:none;">
+    <p id="resumeName"></p>
+    <a id="viewResume" href="#" target="_blank" style="display:none;">View Resume</a>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-edit" id="editBtn">Edit Profile</button>
+    <button class="btn btn-save" id="saveBtn" style="display:none;">Save Changes</button>
+    <button class="btn btn-cancel" id="cancelBtn" style="display:none;">Cancel</button>
+  </div>
+
+</div>
+
+<script>
+const editBtn = document.getElementById('editBtn');
+const saveBtn = document.getElementById('saveBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+const fields = document.querySelectorAll('.profile-fields input, .profile-fields textarea');
+const imageUpload = document.getElementById('imageUpload');
+const profileImage = document.getElementById('profileImage');
+const profileName = document.getElementById('profileName');
+const profileDesignation = document.getElementById('profileDesignation');
+const profileLocation = document.getElementById('profileLocation');
+const profileBio = document.getElementById('profileBio');
+
+let originalData = {};
+
+function saveOriginalData(){
+  fields.forEach(f => originalData[f.id] = f.value);
+  ['languages','hobbies','about','designation','location','shortBio'].forEach(id => {
+    originalData[id] = document.getElementById(id).value;
+  });
+
+// Show upload results via URL params and refresh served image
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  const photo = params.get('photo');
+  const err = params.get('error');
+  if (photo === 'updated') {
+    alert('Profile photo updated successfully.');
+    const bust = Date.now();
+    document.getElementById('profileImage').src = 'jobseeker_profile_image.php?b=' + bust;
+  } else if (err) {
+    let msg = 'Failed to update photo.';
+    if (err === 'type') msg = 'Unsupported image type. Please upload JPG, PNG, GIF, or WEBP.';
+    else if (err === 'toolarge') msg = 'Image too large. Max size is 3MB.';
+    else if (err === 'upload') msg = 'Upload error. Please try again.';
+    else if (err === 'save') msg = 'Could not save the file on server.';
+    else if (err === 'badrequest') msg = 'Bad request. Please select an image.';
+    alert(msg);
+  }
+})();
+}
+
+function restoreOriginalData(){
+  fields.forEach(f => f.value = originalData[f.id]);
+  ['languages','hobbies','about','designation','location','shortBio'].forEach(id => {
+    document.getElementById(id).value = originalData[id];
+  });
+}
+
+saveOriginalData();
+
+// Edit, Cancel, Save
+editBtn.addEventListener('click', () => {
+  fields.forEach(f => f.removeAttribute('readonly'));
+  imageUpload.disabled = false;
+  editBtn.style.display = 'none';
+  saveBtn.style.display = 'inline-block';
+  cancelBtn.style.display = 'inline-block';
+});
+
+cancelBtn.addEventListener('click', () => {
+  restoreOriginalData();
+  fields.forEach(f => f.setAttribute('readonly', true));
+  imageUpload.disabled = true;
+  editBtn.style.display = 'inline-block';
+  saveBtn.style.display = 'none';
+  cancelBtn.style.display = 'none';
+});
+
+saveBtn.addEventListener('click', () => {
+  fields.forEach(f => f.setAttribute('readonly', true));
+  imageUpload.disabled = true;
+  editBtn.style.display = 'inline-block';
+  saveBtn.style.display = 'none';
+  cancelBtn.style.display = 'none';
+
+  profileName.textContent = document.getElementById('name').value;
+  profileDesignation.textContent = document.getElementById('designation').value;
+  profileLocation.textContent = document.getElementById('location').value;
+  profileBio.textContent = document.getElementById('shortBio').value;
+
+  alert("Profile updated successfully!");
+});
+
+// Image preview and auto-upload to server
+imageUpload.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(file){
+    profileImage.src = URL.createObjectURL(file);
+    document.getElementById('photoForm').submit();
+  }
+});
+
+// Skills functions
+function addSkill() {
+  const input = document.getElementById('newSkillInput');
+  const skill = input.value.trim();
+  if(skill === '') return;
+  const span = document.createElement('span');
+  span.innerHTML = `${skill} <span class="remove-skill" onclick="removeSkill(this)">x</span>`;
+  document.getElementById('skillsList').appendChild(span);
+  input.value = '';
+}
+function removeSkill(el) { el.parentElement.remove(); }
+
+// ===== Resume Upload JS =====
+const uploadBtn = document.getElementById('uploadResumeBtn');
+const fileInput = document.getElementById('resumeInput');
+const resumeName = document.getElementById('resumeName');
+const viewResume = document.getElementById('viewResume');
+
+// Load stored resume
+window.addEventListener('load', () => {
+  const savedName = localStorage.getItem('resumeName');
+  const savedURL = localStorage.getItem('resumeURL');
+  if (savedName && savedURL) {
+    resumeName.textContent = `Uploaded: ${savedName}`;
+    viewResume.href = savedURL;
+    viewResume.style.display = 'inline-block';
+  }
+});
+
+uploadBtn.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', function () {
+  const file = this.files[0];
+  if (file) {
+    const fileURL = URL.createObjectURL(file);
+    resumeName.textContent = `Uploaded: ${file.name}`;
+    viewResume.href = fileURL;
+    viewResume.style.display = 'inline-block';
+    localStorage.setItem('resumeName', file.name);
+    localStorage.setItem('resumeURL', fileURL);
+  }
+});
+</script>
+
+</body>
+</html>

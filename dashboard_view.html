@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Details - Quick Hire</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #004aad;
+    }
+    .back-btn {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 8px 14px;
+      background: #004aad;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .card h3 {
+      color: #004aad;
+    }
+  </style>
+</head>
+<body>
+  <a href="job_seeker_dashboard.html" class="back-btn">← Back</a>
+  <h1 id="pageTitle">Dashboard View</h1>
+  <div id="content" class="list"></div>
+
+  <script>
+    const type = localStorage.getItem('dashboardViewType');
+    const data = JSON.parse(localStorage.getItem('dashboardView')) || [];
+    document.getElementById('pageTitle').textContent = type || 'Dashboard View';
+
+    const container = document.getElementById('content');
+    if (data.length === 0) {
+      container.innerHTML = "<p style='text-align:center;'>No data found.</p>";
+    } else {
+      data.forEach(item => {
+        let html = "";
+        if (type === "Applied Jobs" || type === "Recommended Jobs") {
+          html = `<div class="card">
+                    <h3>${item.title}</h3>
+                    <p>Company: ${item.company}</p>
+                    <p>Location: ${item.location}</p>
+                    <p>Type: ${item.type}</p>
+                  </div>`;
+        } else if (type === "Upcoming Interviews") {
+          html = `<div class="card">
+                    <h3>${item.title}</h3>
+                    <p>Company: ${item.company}</p>
+                    <p>Date: ${item.date}</p>
+                    <p>Time: ${item.time}</p>
+                  </div>`;
+        } else if (type === "Applications Received") {
+          html = `<div class="card">
+                    <h3>${item.applicant}</h3>
+                    <p>Applied for: ${item.position}</p>
+                    <p>Company: ${item.company}</p>
+                  </div>`;
+        }
+        container.innerHTML += html;
+      });
+    }
+  </script>
+</body>
+</html>

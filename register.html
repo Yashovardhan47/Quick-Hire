@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Started - Quick Hire</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: aqua;
+      margin: 0;
+    }
+
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .login-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      width: 360px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    label {
+      font-weight: 600;
+    }
+
+    input[type="text"], input[type="email"], input[type="password"], input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      outline: none;
+      font-family: "Poppins", sans-serif;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-login:hover {
+      background: #0056b3;
+    }
+
+    .form-links {
+      margin-top: 15px;
+    }
+
+    /* Remove underline from Sign In link */
+    .form-links a {
+      text-decoration: none; /* remove underline from whole link */
+      color: #000;
+    }
+
+    .form-links a span {
+      color:black;
+      font-weight: 200;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .form-links a span:hover {
+      color: darkblue;
+      text-decoration: underline;
+    }
+
+    /* Custom Alert */
+    .custom-alert {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .alert-box {
+      background: #fff;
+      padding: 20px;
+      width: 320px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    .alert-header {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .alert-btn {
+      padding: 8px 16px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .alert-btn:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="login-box">
+      <h1>Create Your Quick Hire Account</h1>
+      <p>Join us as a Job Seeker or a Recruiter</p>
+
+      <form id="registerForm">
+        <div class="form-group">
+          <label for="full-name">Full Name</label>
+          <input type="text" id="full-name" placeholder="Enter your name" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="Enter your email" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" required>
+        </div>
+
+        <div class="form-group">
+          <label>I am a...</label><br>
+          <input type="radio" id="job-seeker" name="account-type" value="job-seeker" checked> Job Seeker
+          <input type="radio" id="recruiter" name="account-type" value="recruiter"> Recruiter
+        </div>
+
+        <div id="job-seeker-fields">
+          <div class="form-group">
+            <label for="location">Location</label>
+            <input type="text" id="location" placeholder="Enter your city">
+          </div>
+
+          <div class="form-group">
+            <label for="experience">Experience (in years)</label>
+            <input type="number" id="experience" min="0" placeholder="Enter experience">
+            <div style="margin-top:5px;">
+              <input type="checkbox" id="fresherCheck" onclick="toggleFresher()"> 
+              <label for="fresherCheck">I am a Fresher</label>
+            </div>
+          </div>
+        </div>
+
+        <div id="recruiter-fields" style="display:none;">
+          <div class="form-group">
+            <label for="company-name">Company Name</label>
+            <input type="text" id="company-name" placeholder="Enter your company name">
+          </div>
+          <div class="form-group">
+            <label for="company-website">Company Website</label>
+            <input type="text" id="company-website" placeholder="e.g., www.company.com">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-login">Create Account</button>
+        <div class="form-links">
+          <a href="login.html">Already have an account? <span>Sign In</span></a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom Alert -->
+  <div class="custom-alert" id="customAlert">
+    <div class="alert-box">
+      <div class="alert-header">Quick Hire says:</div>
+      <div class="alert-message" id="alertMessage"></div>
+      <button class="alert-btn" id="alertBtn">OK</button>
+    </div>
+  </div>
+
+  <script>
+    // Toggle between job seeker and recruiter
+    document.querySelectorAll('input[name="account-type"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        document.getElementById('job-seeker-fields').style.display =
+          document.getElementById('job-seeker').checked ? 'block' : 'none';
+        document.getElementById('recruiter-fields').style.display =
+          document.getElementById('recruiter').checked ? 'block' : 'none';
+      });
+    });
+
+    // Fresher logic
+    function toggleFresher() {
+      const expInput = document.getElementById('experience');
+      const fresher = document.getElementById('fresherCheck');
+      if (fresher.checked) {
+        expInput.value = 0;
+        expInput.disabled = true;
+      } else {
+        expInput.disabled = false;
+        expInput.value = '';
+      }
+    }
+
+    // Custom Alert
+    function showAlert(message, callback) {
+      document.getElementById('alertMessage').innerText = message;
+      document.getElementById('customAlert').style.display = 'flex';
+      document.getElementById('alertBtn').onclick = function() {
+        document.getElementById('customAlert').style.display = 'none';
+        if (callback) callback();
+      };
+    }
+
+    // Handle Registration
+    document.getElementById('registerForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const accountType = document.querySelector('input[name="account-type"]:checked').value;
+      showAlert(`Account created successfully as a ${accountType.replace('-', ' ')}! Redirecting to dashboard...`, () => {
+        if (accountType === "job-seeker") {
+          window.location.href = "job_seeker_dashboard.html";
+        } else {
+          window.location.href = "recruiter_dashboard.html";
+        }
+      });
+    });
+  </script>
+</body>
+</html>

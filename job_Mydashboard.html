@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Dashboard - Quick Hire</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  /* ===== General Layout ===== */
+  body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, #f0f4ff, #f7f9fc);
+    color: #333;
+    transition: background 0.3s ease;
+  }
+
+  /* ===== Header ===== */
+  .page-header {
+    padding: 2rem 2rem 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(90deg, #004aad, #0078ff);
+    color: #fff;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .page-header p {
+    color: #e3e7ff;
+    margin-top: 5px;
+  }
+
+  /* ===== Back Button ===== */
+  .back-btn {
+    background: #fff;
+    color: #004aad;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(255,255,255,0.3);
+  }
+  .back-btn:hover {
+    background: #f0f4ff;
+    transform: translateY(-2px);
+  }
+
+  /* ===== Cards Section ===== */
+  .dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin: 30px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 15px;
+    padding: 25px 20px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, rgba(0,74,173,0.05), transparent);
+    opacity: 0;
+    transition: 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+  }
+
+  .card:hover::after {
+    opacity: 1;
+  }
+
+  .card h2 {
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .card p {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .applied p { color: #004aad; }
+  .interview p { color: #ff9800; }
+  .recommended p { color: #28a745; }
+
+  /* ===== Data Table Section ===== */
+  #dashboardData {
+    margin: 30px auto;
+    width: 90%;
+    background: #fff;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: 0.3s ease;
+  }
+
+  #dashboardData h2 {
+    text-align: center;
+    color: #004aad;
+    margin-bottom: 15px;
+    font-weight: 600;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+
+  th {
+    background: #f0f4ff;
+    color: #004aad;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    color: #444;
+  }
+
+  tr:hover td {
+    background: #fafbff;
+  }
+
+  button.apply-btn {
+    background: #004aad;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.3s ease;
+  }
+
+  button.apply-btn:hover {
+    background: #003580;
+    transform: scale(1.05);
+  }
+
+  /* ===== Chart Section ===== */
+  .chart-container {
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    max-width: 600px;
+    margin: 40px auto;
+    transition: 0.3s ease;
+  }
+
+  .chart-container:hover {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+  }
+
+  .chart-container h3 {
+    text-align: center;
+    color: #004aad;
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 768px) {
+    .page-header {
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="page-header">
+  <div>
+    <h1>My Dashboard</h1>
+    <p>Track your applications and discover new opportunities</p>
+  </div>
+  <a href="job_seeker_dashboard.html">
+    <button class="back-btn" onclick="goBack()">← Back</button>
+  </a>
+</div>
+
+<section class="dashboard">
+  <div class="card applied" onclick="showAppliedJobs()">
+    <h2>Total Applications</h2>
+    <p id="appliedCount">0</p>
+  </div>
+  <div class="card interview" onclick="showUpcomingInterviews()">
+    <h2>Pending</h2>
+    <p>0</p>
+  </div>
+  <div class="card applied">
+    <h2>Shortlisted</h2>
+    <p>0</p>
+  </div>
+  <div class="card recommended">
+    <h2>Hired</h2>
+    <p>0</p>
+  </div>
+  <div class="card" style="color:#e74c3c;">
+    <h2>Rejected</h2>
+    <p>0</p>
+  </div>
+</section>
+
+<section id="dashboardData"></section>
+
+<section class="chart-container">
+  <h3>Job Stats Analysis</h3>
+  <canvas id="jobChart" height="120"></canvas>
+</section>
+
+<script>
+  function goBack() {
+    window.history.back();
+  }
+
+  const jobs = [
+    { title: "Frontend Developer", company: "TechNova", location: "Remote", type: "Full-Time" },
+    { title: "Backend Engineer", company: "InnoSoft", location: "Bangalore", type: "Full-Time" },
+    { title: "Data Analyst Intern", company: "DataWorks", location: "Pune", type: "Internship" },
+    { title: "UX Designer", company: "InnoSoft", location: "Noida", type: "Part-Time" },
+    { title: "Full Stack Developer", company: "TechNova", location: "Mumbai", type: "Full-Time" }
+  ];
+
+  const interviews = [
+    { company: "TechNova", title: "Frontend Developer", date: "2025-10-20", time: "10:00 AM" },
+    { company: "InnoSoft", title: "Backend Engineer", date: "2025-10-22", time: "2:00 PM" }
+  ];
+
+  const recommended = jobs.slice(0,3);
+  const appliedJobs = JSON.parse(localStorage.getItem('appliedJobs') || '[]');
+
+  document.getElementById('appliedCount').textContent = appliedJobs.length;
+
+  function renderTable(data, title, withApply=false) {
+    const container = document.getElementById('dashboardData');
+    container.innerHTML = `<h2>${title}</h2>`;
+    if (!data.length) {
+      container.innerHTML += "<p style='text-align:center;color:#888;'>No data available</p>";
+      return;
+    }
+
+    const table = document.createElement('table');
+    const headers = Object.keys(data[0]);
+    if (withApply) headers.push("Action");
+    table.innerHTML = `<tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr>`;
+
+    data.forEach((item,index)=>{
+      let row = `<tr>${Object.values(item).map(v=>`<td>${v}</td>`).join('')}`;
+      if(withApply){
+        row += `<td><button class="apply-btn" onclick="applyRecommendedJob(${index})">Apply</button></td>`;
+      }
+      row += `</tr>`;
+      table.innerHTML += row;
+    });
+    container.appendChild(table);
+  }
+
+  function showAppliedJobs(){
+    if(appliedJobs.length===0){
+      alert("No applied jobs yet.");
+      return;
+    }
+    renderTable(appliedJobs,"Applied Jobs");
+  }
+
+  function showUpcomingInterviews(){
+    renderTable(interviews,"Upcoming Interviews");
+  }
+
+  const ctx = document.getElementById('jobChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Applied Jobs', 'Upcoming Interviews', 'Recommended Jobs'],
+      datasets: [{
+        data: [appliedJobs.length, interviews.length, recommended.length],
+        backgroundColor: ['#004aad', '#ff6b6b', '#ffa600'],
+        borderWidth: 1
+      }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } } }
+  });
+</script>
+
+</body>
+</html>

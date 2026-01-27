@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Seeker Registration - Quick Hire</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: aqua;
+      margin: 0;
+    }
+
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .login-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      width: 360px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    label {
+      font-weight: 600;
+    }
+
+    input[type="text"], input[type="email"], input[type="password"], input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      outline: none;
+      font-family: "Poppins", sans-serif;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-login:hover {
+      background: #0056b3;
+    }
+
+    .form-links {
+      margin-top: 15px;
+    }
+
+    .form-links a {
+      text-decoration: none;
+      color: #000;
+    }
+
+    .form-links a span {
+      color:black;
+      font-weight: 200;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .form-links a span:hover {
+      color: darkblue;
+      text-decoration: underline;
+    }
+
+    /* Custom Alert */
+    .custom-alert {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .alert-box {
+      background: #fff;
+      padding: 20px;
+      width: 320px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    .alert-header {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #007bff;
+    }
+
+    .alert-message {
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .alert-btn {
+      padding: 8px 16px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .alert-btn:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-box">
+      <h1>Join Quick Hire</h1>
+      <p>Register as a Job Seeker</p>
+
+      <form id="jobSeekerForm" method="POST" action="register_jobseeker.php">
+
+        <div class="form-group">
+          <label for="full_name">Full Name</label>
+          <input type="text" id="full_name" name="full_name" placeholder="Enter your name" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required>
+        </div>
+
+        <div class="form-group">
+          <label for="location">Location</label>
+          <input type="text" id="location" name="location" placeholder="Enter your city" required>
+        </div>
+
+        <div class="form-group">
+          <label for="experience">Experience (in years)</label>
+          <input type="number" id="experience" name="experience" min="0" placeholder="Enter experience">
+          <div style="margin-top:5px;">
+            <input type="checkbox" id="fresherCheck" onclick="toggleFresher()"> 
+            <label for="fresherCheck">I am a Fresher</label>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-login">Create Account</button>
+        <div class="form-links">
+          <a href="jobseeker_login.html">Already have an account? <span>Sign In</span></a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom Alert -->
+  <div class="custom-alert" id="customAlert">
+    <div class="alert-box">
+      <div class="alert-header">Quick Hire says:</div>
+      <div class="alert-message" id="alertMessage"></div>
+      <button class="alert-btn" id="alertBtn">OK</button>
+    </div>
+  </div>
+
+<script>
+  // ✅ Toggle fresher checkbox
+  function toggleFresher() {
+    const expInput = document.getElementById('experience');
+    const fresher = document.getElementById('fresherCheck');
+    if (fresher.checked) {
+      expInput.value = 0;
+      expInput.disabled = true;
+    } else {
+      expInput.disabled = false;
+      expInput.value = '';
+    }
+  }
+
+  // ✅ Custom alert popup with working redirect
+  function showAlert(message, redirect = false) {
+    const alertBox = document.getElementById('customAlert');
+    const alertMessage = document.getElementById('alertMessage');
+    const alertBtn = document.getElementById('alertBtn');
+
+    alertMessage.innerText = message;
+    alertBox.style.display = 'flex';
+
+    alertBtn.onclick = function() {
+      alertBox.style.display = 'none';
+      if (redirect) {
+        window.location.href = "job_seeker_dashboard.html"; // ✅ Redirects here
+      }
+    };
+  }
+
+  // Show server responses via URL params
+  document.addEventListener('DOMContentLoaded', function(){
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('error');
+    if (err === 'exists') {
+      showAlert('Job seeker already exists. Please sign in or use a different email.');
+    } else if (err === 'invalid') {
+      showAlert('Please fill all required fields.');
+    }
+  });
+
+  // Form now submits to server-side PHP for actual registration
+</script>
+
+
+</body>
+</html>

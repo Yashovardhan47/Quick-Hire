@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Hire - Sign In</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    .a:hover, .b:hover, .fp:hover, .dha:hover {
+      text-decoration: underline;
+      cursor: pointer;
+      color: blue;
+    }
+
+    .login-form { display: none; }
+    .login-form.active { display: block; }
+
+    /* Custom Alert Styles */
+    .custom-alert {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999; /* ensure popup appears above everything */
+    }
+
+    .alert-box {
+      background: #fff;
+      padding: 20px;
+      width: 300px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      text-align: center;
+      font-family: "Poppins", sans-serif;
+    }
+
+    .alert-header {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .alert-message {
+      margin-bottom: 15px;
+    }
+
+    .alert-btn {
+      padding: 8px 16px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .alert-btn:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body class="login-page" style="background-color: rgb(248, 211, 144);">
+
+  <div class="login-container">
+    <div class="login-box">
+      <h1 class="login-title">Sign In to Quick Hire</h1>
+
+      <div class="tab-container">
+        <button class="tab-btn active" onclick="showForm('job-seeker')">Job Seeker Login</button>
+        <button class="tab-btn" onclick="showForm('recruiter')">Recruiter Login</button>
+      </div>
+
+      <!-- Job Seeker Login -->
+      <form id="job-seeker-form" class="login-form active" onsubmit="handleLogin(event, 'Job Seeker')">
+        <div class="form-group">
+          <label for="js-email">Email Address</label>
+          <input type="email" id="js-email" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+          <label for="js-password">Password</label>
+          <input type="password" id="js-password" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="btn btn-login">Sign In</button>
+        <div class="form-links">
+          <a href="#"><span class="b">Forgot Password?</span></a>
+          <span style="color: aliceblue;">|</span>
+          <a href="register.html"><span class="a">Don't have an account</span></a>
+        </div>
+      </form>
+
+      <!-- Recruiter Login -->
+      <form id="recruiter-form" class="login-form" onsubmit="handleLogin(event, 'Recruiter')">
+        <div class="form-group">
+          <label for="rec-email">Email Address</label>
+          <input type="email" id="rec-email" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+          <label for="rec-password">Password</label>
+          <input type="password" id="rec-password" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="btn btn-login">Sign In</button>
+        <div class="form-links">
+          <a href="#"><span class="fp">Forgot Password?</span></a>
+          <span style="color: rgb(171, 202, 249);">|</span>
+          <a href="register.html"><span class="dha">Don't have an account</span></a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom Alert -->
+  <div class="custom-alert" id="customAlert">
+    <div class="alert-box">
+      <div class="alert-header">Quick Hire says:</div>
+      <div class="alert-message" id="alertMessage"></div>
+      <button class="alert-btn" onclick="closeAlert()">OK</button>
+    </div>
+  </div>
+
+  <!-- Forgot Password Popup -->
+  <div class="custom-alert" id="forgotPasswordBox">
+    <div class="alert-box">
+      <div class="alert-header">Reset Password</div>
+      <div class="alert-message">
+        <p>Enter your registered email to receive a password reset link:</p>
+        <input type="email" id="resetEmail" placeholder="Enter your email"
+          style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+      </div>
+      <button class="alert-btn" onclick="sendResetLink()">Send Reset Link</button>
+      <button class="alert-btn" style="background:#6c757d; margin-left:8px;" onclick="closeForgotBox()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    // Switch between Job Seeker and Recruiter forms
+    function showForm(formType) {
+      document.getElementById("job-seeker-form").classList.remove("active");
+      document.getElementById("recruiter-form").classList.remove("active");
+
+      let buttons = document.querySelectorAll(".tab-btn");
+      buttons.forEach(btn => btn.classList.remove("active"));
+
+      if (formType === "job-seeker") {
+        document.getElementById("job-seeker-form").classList.add("active");
+        buttons[0].classList.add("active");
+        alert("You have selected Job Seeker login.");
+      } else {
+        document.getElementById("recruiter-form").classList.add("active");
+        buttons[1].classList.add("active");
+        alert("You have selected Recruiter login.");
+      }
+    }
+
+    // Custom Alert
+    function showCustomAlert(message, redirect = null) {
+      document.getElementById("alertMessage").innerText = message;
+      document.getElementById("customAlert").style.display = "flex";
+
+      if (redirect) {
+        document.getElementById("customAlert").dataset.redirect = redirect;
+      } else {
+        delete document.getElementById("customAlert").dataset.redirect;
+      }
+    }
+
+    function closeAlert() {
+      const alertBox = document.getElementById("customAlert");
+      alertBox.style.display = "none";
+
+      if (alertBox.dataset.redirect) {
+        window.location.href = alertBox.dataset.redirect;
+      }
+    }
+
+    // Handle Sign In
+    function handleLogin(event, userType) {
+      event.preventDefault();
+
+      if (userType === "Job Seeker") {
+        showCustomAlert("Login successful! Redirecting to dashboard...", "job_seeker_dashboard.html");
+        // window.location.href = "job_seeker_dashboard.html";
+      } else {
+        showCustomAlert("Recruiter login successful! Redirecting to dashboard...", "recruiter_dashboard.html");
+      }
+    }
+
+    // Forgot Password functionality
+    window.addEventListener("DOMContentLoaded", function () {
+      const forgotPasswordLinks = document.querySelectorAll(".b, .fp"); // both forms
+      forgotPasswordLinks.forEach(link => {
+        link.addEventListener("click", function (e) {
+          e.preventDefault();
+          document.getElementById("forgotPasswordBox").style.display = "flex";
+        });
+      });
+    });
+
+    function closeForgotBox() {
+      document.getElementById("forgotPasswordBox").style.display = "none";
+    }
+
+    function sendResetLink() {
+      const email = document.getElementById("resetEmail").value.trim();
+      if (email === "") {
+        alert("Please enter your email address.");
+        return;
+      }
+      closeForgotBox();
+      showCustomAlert("A password reset link has been sent to " + email + ".");
+    }
+  </script>
+
+</body>
+</html>

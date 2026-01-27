@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Hire - Connect Talent with Opportunity</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Bottom-right popup styles */
+        .bottom-popup {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            background-color: #007bff;
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            font-family: "Poppins", sans-serif;
+        }
+        .bottom-popup button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            border: none;
+            background-color: #fff;
+            color: #007bff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .bottom-popup button:hover {
+            background-color: #e6e6e6;
+        }
+        .bottom-popup.show {
+            display: block;
+        }
+
+        /* Additional section styles */
+        .extra-section {
+            background-color: #f1faff;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .extra-section h2 {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+        }
+        .extra-section p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+        }
+
+        /* Navbar button */
+        .get-started-btn {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .get-started-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Platform Overview Section */
+        .platform-overview {
+            background-color: #f9f9fb;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .platform-overview h2 {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+        }
+        .platform-overview p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto 30px auto;
+        }
+        .ui-ux-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .ui-ux-features .feature-card {
+            background-color: #fff;
+            padding: 20px 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .ui-ux-features .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .ui-ux-features h3 {
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+        .ui-ux-features p {
+            font-size: 1rem;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+<header class="main-header">
+    <nav class="navbar">
+        <div class="logo">Quick Hire</div>
+        <ul class="nav-links" style="justify-content: center;">
+            <!-- <li><a href="index.html">Home</a></li> -->
+            <li><a href="for_job_seekers.html">For Job Seekers</a></li>
+            <li><a href="for_recruiters.html" class="active">For Recruiters</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="Admin_login.html">Admin</a></li> <!-- Added Admin link -->
+            <li><a href="register.html" class="get-started-btn">Get Started</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1>Connect Talent with Opportunity</h1>
+            <p>Quick Hire makes recruitment smarter, faster, and more personal. Find the right candidates, post jobs effortlessly, and streamline your hiring process.</p>
+            <div class="hero-actions">
+                <a href="for_job_seekers.html" class="btn btn-primary">Find Your Dream Job →</a>
+                <a href="for_recruiters.html" class="btn btn-secondary">Hire Top Talent →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- New Platform Overview Section -->
+    <section class="platform-overview">
+        <div class="container">
+            <h2>About Quick Hire</h2>
+            <p>Quick Hire is designed to simplify recruitment by combining intelligent algorithms with an intuitive interface. Our platform focuses on <strong>seamless user experience</strong> for both recruiters and job seekers, ensuring that every interaction is smooth, clear, and efficient.</p>
+            <div class="ui-ux-features">
+                <div class="feature-card">
+                    <h3>Intuitive Dashboard</h3>
+                    <p>Navigate easily through applications, job postings, and analytics with a clean and organized dashboard.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Smart Job Matching</h3>
+                    <p>AI-driven recommendations help recruiters find ideal candidates and job seekers find the perfect roles effortlessly.</p>
+                </div>
+                <!-- <div class="feature-card">
+                    <h3>Responsive Design</h3>
+                    <p>Quick Hire works flawlessly across devices—desktop, tablet, or mobile—so you can manage hiring anywhere, anytime.</p>
+                </div> -->
+                <div class="feature-card">
+                    <h3>Enhanced UX</h3>
+                    <p>Clear visual hierarchy, intuitive navigation, and smooth interactions make recruitment tasks faster and more enjoyable.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Real-Time Insights</h3>
+                    <p>Track recruitment progress, candidate engagement, and job performance with dynamic analytics and visual reports.</p>
+                </div>
+            </div>
+            <p>Our goal is to <strong>redefine hiring</strong> by creating a platform where technology and human intelligence work hand-in-hand to make recruitment faster, smarter, and more reliable.</p>
+        </div>
+    </section>
+
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number">10K+</span>
+                    <p class="stat-text">Active Jobs</p>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">5K+</span>
+                    <p class="stat-text">Companies</p>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">50K+</span>
+                    <p class="stat-text">Job Seekers</p>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">95%</span>
+                    <p class="stat-text">Success Rate</p>
+                </div>
+            </div>
+
+            <div class="why-choose-section">
+                <h2>Why Choose Quick Hire?</h2>
+                <p class="subtitle">Revolutionizing the hiring process with cutting-edge technology and human-centered design.</p>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="icon-placeholder"></div>
+                        <h3>Smart Job Matching</h3>
+                        <p>AI-powered algorithms help you find the best candidates in minutes.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon-placeholder"></div>
+                        <h3>Fast & Efficient</h3>
+                        <p>Reduce hiring time and streamline your recruitment process effortlessly.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon-placeholder"></div>
+                        <h3>Real-time Analytics</h3>
+                        <p>Track candidate applications, engagement, and recruitment metrics in real time.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon-placeholder"></div>
+                        <h3>Quality Assured</h3>
+                        <p>Every candidate is pre-screened to ensure high-quality hiring.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="extra-section">
+        <h2>Recruit Smarter, Not Harder!</h2>
+        <p>With Quick Hire, discover top talent across industries with just a few clicks. Post jobs, review applications, and shortlist candidates faster than ever.</p>
+        <p>Our platform ensures that every candidate you see is a perfect fit for your requirements. Save time, reduce effort, and hire with confidence.</p>
+        <p>Join thousands of companies who have transformed their hiring process and achieved incredible success!</p>
+    </section>
+</main>
+
+<footer class="main-footer">
+    <div class="footer-cta-section">
+        <div class="container">
+            <h2>Ready to Transform Your Hiring?</h2>
+            <p>Join thousands of companies who've found top talent through Quick Hire.</p>
+            <div class="footer-cta-buttons">
+                <a href="#" class="btn btn-cta-primary">Start Hiring</a>
+                <a href="#" class="btn btn-cta-secondary">Post a Job</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-links-section">
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-col footer-logo">
+                    <div class="logo">Quick Hire</div>
+                    <p>Connecting talent with opportunity through personalized job matching and efficient recruitment.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Platform</h4>
+                    <ul>
+                        <li><a href="#">For Job Seekers</a></li>
+                        <li><a href="#">For Recruiters</a></li>
+                        <li><a href="#">About Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Get in Touch</h4>
+                    <p>Ready to transform your hiring? Contact us today to get started.</p>
+                </div>
+            </div>
+            <hr>
+            <p class="copyright">&copy; 2025 Quick Hire. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<div class="bottom-popup" id="bottomPopup">
+    <p>Welcome! Are you a Job Seeker or a Recruiter?</p>
+    <button onclick="redirectUser('job-seeker')">Job Seeker</button>
+    <button onclick="redirectUser('recruiter')">Recruiter</button>
+</div>
+
+<script>
+    function redirectUser(type) {
+        if(type === 'job-seeker') {
+            window.location.href = 'for_job_seekers.html';
+        } else {
+            window.location.href = 'for_recruiters.html';
+        }
+    }
+
+    window.addEventListener('scroll', () => {
+        const popup = document.getElementById('bottomPopup');
+        const scrollTop = window.scrollY;
+        const windowHeight = window.innerHeight;
+        const docHeight = document.documentElement.scrollHeight;
+
+        if(scrollTop + windowHeight >= docHeight - 10) {
+            popup.classList.add('show');
+        }
+    });
+</script>
+
+</body>
+</html>

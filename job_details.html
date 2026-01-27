@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Details - Quick Hire</title>
+<style>
+  body { font-family: 'Poppins', sans-serif; margin: 20px; background: #f5f7fa; color: #333; }
+  .container { max-width: 700px; margin:auto; background:#fff; padding:25px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+  h2 { color:#004aad; margin-bottom:15px; text-align:center; }
+  .section { margin-bottom:20px; }
+  .section h3 { color:#004aad; margin-bottom:8px; }
+  p { margin:5px 0; }
+  ul { margin:5px 0 10px 20px; }
+  .apply-btn { padding:12px 25px; background:#007bff; color:#fff; border:none; border-radius:6px; cursor:pointer; margin-top:20px; font-size:1rem; width:100%; }
+  .apply-btn:hover { background:#0056b3; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2 id="jobTitle"></h2>
+
+  <div class="section">
+    <h3>Company</h3>
+    <p id="jobCompany"></p>
+  </div>
+
+  <div class="section">
+    <h3>Location</h3>
+    <p id="jobLocation"></p>
+  </div>
+
+  <div class="section">
+    <h3>Job Type</h3>
+    <p id="jobType"></p>
+  </div>
+
+  <div class="section">
+    <h3>Salary</h3>
+    <p id="jobSalary"></p>
+  </div>
+
+  <div class="section">
+    <h3>Experience Required</h3>
+    <p id="jobExperience"></p>
+  </div>
+
+  <div class="section">
+    <h3>Job Description</h3>
+    <p id="jobDescription"></p>
+  </div>
+
+  <div class="section">
+    <h3>Requirements</h3>
+    <ul id="jobRequirements"></ul>
+  </div>
+
+  <div class="section">
+    <h3>Benefits</h3>
+    <ul id="jobBenefits"></ul>
+  </div>
+
+  <button class="apply-btn" id="applyBtn">Apply</button>
+</div>
+
+<script>
+  const selectedJob = JSON.parse(localStorage.getItem('selectedJob'));
+
+  if(!selectedJob){
+    alert("No job selected!");
+    window.location.href='job_seeker_dashboard.html';
+  }
+
+  document.getElementById('jobTitle').textContent = selectedJob.title;
+  document.getElementById('jobCompany').textContent = selectedJob.company;
+  document.getElementById('jobLocation').textContent = selectedJob.location;
+  document.getElementById('jobType').textContent = selectedJob.type;
+  document.getElementById('jobSalary').textContent = selectedJob.salary || "Not specified";
+  document.getElementById('jobExperience').textContent = selectedJob.experience || "Not specified";
+  document.getElementById('jobDescription').textContent = selectedJob.description || "No description provided.";
+
+  const reqList = document.getElementById('jobRequirements');
+  (selectedJob.requirements || ["Not specified"]).forEach(req => {
+    const li = document.createElement('li');
+    li.textContent = req;
+    reqList.appendChild(li);
+  });
+
+  const benList = document.getElementById('jobBenefits');
+  (selectedJob.benefits || ["Not specified"]).forEach(ben => {
+    const li = document.createElement('li');
+    li.textContent = ben;
+    benList.appendChild(li);
+  });
+
+  document.getElementById('applyBtn').addEventListener('click', () => {
+    let appliedJobs = JSON.parse(localStorage.getItem('appliedJobs')) || [];
+    const alreadyApplied = appliedJobs.find(j => 
+      j.title === selectedJob.title && j.company === selectedJob.company
+    );
+
+    if(alreadyApplied){
+      alert("You have already applied for this job.");
+    } else {
+      appliedJobs.push(selectedJob);
+      localStorage.setItem('appliedJobs', JSON.stringify(appliedJobs));
+      alert("Applied successfully!");
+    }
+
+    window.location.href = 'job_seeker_dashboard.html';
+  });
+</script>
+
+</body>
+</html>
