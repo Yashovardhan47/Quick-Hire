@@ -4,10 +4,17 @@ Built using HTML, CSS, PHP, and MySQL, the system focuses on simplicity, usabili
 This project demonstrates practical implementation of full-stack web development concepts and database-driven applications.
 
 Overall web site interface
+
+
 <img width="538" height="319" alt="Picture1" src="https://github.com/user-attachments/assets/6ba07584-f62b-4fda-be3d-22f6ac55653d" />
 
 Work flow demonstration of the Quick Hire
+
+
 <img width="358" height="509" alt="Picture2" src="https://github.com/user-attachments/assets/ef87d0d1-dda1-4207-8f49-b63dfb240e84" />
+
+
+
 7.1	Conclusion:
 
 The Quick Hire platform, developed as a centralized recruitment system, provides an efficient and interactive space for job seekers and recruiters to connect seamlessly. With its organized design, user-friendly interface, and features like job listings, application tracking, and personalized recommendations, the platform simplifies the entire hiring process. By addressing the limitations of traditional recruitment methods and enhancing communication between candidates and employers, Quick Hire offers a modern, reliable, and engaging solution that makes job searching and recruitment faster, smarter, and more effective for all users.
