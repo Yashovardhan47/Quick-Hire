@@ -1,26 +1,24 @@
-Quick Hire is a web-based recruitment management system designed to streamline the hiring process by connecting job seekers and recruiters on a single platform.
-The application provides separate dashboards for recruiters and job seekers, enabling recruiters to post jobs, search and hire candidates, while job seekers can register, log in, manage profiles, and apply for relevant opportunities. 
-Built using HTML, CSS, PHP, and MySQL, the system focuses on simplicity, usability, and efficient data handling, offering secure authentication, profile management, and real-time interaction between users.
-This project demonstrates practical implementation of full-stack web development concepts and database-driven applications.
+# QuickHire EvidenceGraph
 
-Overall web site interface
+QuickHire EvidenceGraph is the AI-first evolution of Quick-Hire. It connects job requirements to verifiable candidate evidence from profiles, projects, assessments and structured interviews. AI produces transparent recommendations with confidence and missing-evidence explanations; a human recruiter remains responsible for employment decisions.
 
+## First foundation release
 
-<img width="538" height="319" alt="Picture1" src="https://github.com/user-attachments/assets/6ba07584-f62b-4fda-be3d-22f6ac55653d" />
+- FastAPI API with role-based users, jobs, applications and candidate evidence
+- PostgreSQL schema prepared for `pgvector`
+- Explainable, uncertainty-aware EvidenceGraph matching engine
+- Candidate, recruiter and platform-admin dashboard foundations
+- WebSocket event channel for live application and interview updates
+- Audit-ready model version and explanation fields
+- Docker Compose development environment
 
-Work flow demonstration of the Quick Hire
+## Run locally
 
+1. Copy `.env.example` to `.env` and replace every development secret.
+2. Run `docker compose up --build`.
+3. Open `http://localhost:5173`; API documentation is at `http://localhost:8000/docs`.
 
-<img width="358" height="509" alt="Picture2" src="https://github.com/user-attachments/assets/ef87d0d1-dda1-4207-8f49-b63dfb240e84" />
+The previous PHP prototype remains in the branch history for reference. Do not reuse credentials that were ever committed to the public repository.
 
-
-
-7.1	Conclusion:
-
-The Quick Hire platform, developed as a centralized recruitment system, provides an efficient and interactive space for job seekers and recruiters to connect seamlessly. With its organized design, user-friendly interface, and features like job listings, application tracking, and personalized recommendations, the platform simplifies the entire hiring process. By addressing the limitations of traditional recruitment methods and enhancing communication between candidates and employers, Quick Hire offers a modern, reliable, and engaging solution that makes job searching and recruitment faster, smarter, and more effective for all users.
-
-
-7.2	Future Work:
-
-This project offers several opportunities for future enhancement and expansion. Future work may include extending the platform to cover a broader range of industries and job categories, introducing improved filtering and sorting options for more precise job matching, and enhancing the recruiter dashboard with detailed analytics and applicant insights. Improving the responsiveness and visual consistency of the interface can further enhance the overall user experience. Regular updates to job listings, better management of user data, and the addition of secure authentication methods can increase reliability and trust. Continuous testing, maintenance, and optimization will ensure system stability, while refining interaction between job seekers and recruiters will strengthen platform usability. Collectively, these improvements will enable Quick Hire to evolve into a more comprehensive, efficient, and user-centered recruitment solution.
+See [docs/AI_PLATFORM_BLUEPRINT.md](docs/AI_PLATFORM_BLUEPRINT.md) for the planned research and product architecture.
 

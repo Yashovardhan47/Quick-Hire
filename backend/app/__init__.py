@@ -1,0 +1,2 @@
+"""QuickHire EvidenceGraph backend."""
+

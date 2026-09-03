@@ -1,10 +1,15 @@
 <?php
-// DO NOT expose your key in any client-side code.
-// Configured for JSearch on RapidAPI
+// Legacy connector configuration. Never place an API key in this file.
+$rapidApiKey = getenv('RAPIDAPI_KEY') ?: '';
+if ($rapidApiKey === '') {
+    http_response_code(503);
+    exit('RAPIDAPI_KEY is not configured');
+}
 
-define('RAPIDAPI_KEY', 'd0dc68c726mshcd21597f413127fp1bc843jsna571eed6741c');
+define('RAPIDAPI_KEY', $rapidApiKey);
 define('RAPIDAPI_HOST', 'jsearch.p.rapidapi.com');
 define('RAPIDAPI_BASE_URL', 'https://jsearch.p.rapidapi.com');
 define('RAPIDAPI_SEARCH_PATH', '/search');
-// JSearch does not provide a dedicated profile-by-id endpoint; keep same path for any fallback usage
 define('RAPIDAPI_GET_PATH', '/job-details');
+?>
+
