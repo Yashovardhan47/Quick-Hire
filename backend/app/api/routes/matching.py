@@ -44,8 +44,10 @@ async def match_me(
 async def recruiter_match(
     job_id: str,
     candidate_id: str,
-    _: dict = Depends(require_roles(UserRole.recruiter, UserRole.admin)),
+    identity: dict = Depends(require_roles(UserRole.recruiter, UserRole.admin)),
     db: AsyncSession = Depends(get_db),
 ) -> MatchResult:
+    job = await db.get(Job, job_id)
+    if not job or (identity["role"] != UserRole.admin.value and job.recruiter_id != identity["sub"]):
+        raise HTTPException(status_code=404, detail="Job not found")
     return await compute_match(job_id, candidate_id, db)
-

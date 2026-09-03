@@ -38,11 +38,32 @@ Protected attributes may be used only in separated, access-controlled audit data
 
 ## Delivery stages
 
-1. Secure platform foundation and core ATS
-2. Resume and job-description normalization
-3. Hybrid retrieval and EvidenceGraph scoring
-4. Adaptive tests and isolated coding assessment
-5. Structured AI mock interviews
-6. Candidate and recruiter copilots
-7. Model monitoring, drift, fairness, appeals and publication evaluation
+1. **Implemented:** secure platform foundation, role isolation and core ATS
+2. **Implemented baseline:** resume and job-description normalization with controlled competencies
+3. **Implemented baseline:** EvidenceGraph scoring, uncertainty and counterfactual recommendations
+4. **Implemented baseline:** adaptive objective tests; isolated coding sandbox remains planned
+5. **Implemented baseline:** structured typed mock interviews with disclosed content rubrics
+6. **Implemented baseline:** grounded candidate next actions and recruiter review assistance
+7. **Next:** embedding retrieval, calibrated reranking and resume file ingestion
+8. **Next:** interview scheduling, communication, appeals and accommodations
+9. **Before production:** representative evaluation dataset, model cards, drift, security and independent fairness audits
 
+## 0.2 workflow architecture
+
+- `talent_intelligence.py` normalizes resume and job text into a controlled skill taxonomy. Resume claims are unverified until supported by platform or human-reviewed evidence.
+- `evidence_graph.py` connects weighted job requirements to evidence and returns fit, confidence, an uncertainty interval, gaps and next-best verification actions.
+- `assessment_engine.py` selects objective questions for low-coverage competencies. Unknown competencies are routed to human review and excluded from automated scores.
+- `interview_engine.py` creates structured questions and checks typed answers for disclosed context, action, result and reflection criteria. Output is practice feedback and requires human review.
+- `application_workflow.py` enforces valid pipeline transitions. Every recruiter transition records a reason, stage-history row and audit event.
+- Authenticated WebSockets notify the relevant user after committed workflow events.
+
+## Accuracy roadmap
+
+The deterministic 0.2 baseline is deliberately testable and explainable. Higher accuracy should be added as a measured hybrid, not as an opaque replacement:
+
+1. Parse PDFs and DOCX files in an isolated ingestion worker with prompt-injection and malware defenses.
+2. Retrieve competencies with multilingual embeddings, then rerank only job-related evidence with a cross-encoder.
+3. Calibrate confidence on a representative validation set and abstain when evidence is sparse or out of distribution.
+4. Compare keyword, embedding-only and EvidenceGraph variants using NDCG@K, Brier score, explanation citation accuracy and recruiter override rate.
+5. Add a sandboxed coding service with fixed tests, resource limits and no network access.
+6. Publish model cards, data lineage, subgroup error analysis and candidate recourse results before consequential deployment.

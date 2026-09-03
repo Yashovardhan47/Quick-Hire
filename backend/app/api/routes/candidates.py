@@ -11,6 +11,17 @@ from app.schemas.api import CandidateProfileInput, EvidenceCreate, EvidenceRead
 router = APIRouter(prefix="/candidates", tags=["candidates"])
 
 
+@router.get("/me/profile", response_model=CandidateProfileInput)
+async def get_profile(
+    identity: dict = Depends(require_roles(UserRole.candidate)),
+    db: AsyncSession = Depends(get_db),
+) -> CandidateProfile:
+    profile = await db.get(CandidateProfile, identity["sub"])
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Candidate profile not found")
+    return profile
+
+
 @router.put("/me/profile", response_model=CandidateProfileInput)
 async def upsert_profile(
     payload: CandidateProfileInput,
@@ -50,4 +61,3 @@ async def add_evidence(
     await db.commit()
     await db.refresh(evidence)
     return evidence
-

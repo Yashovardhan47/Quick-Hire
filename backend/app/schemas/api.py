@@ -116,4 +116,138 @@ class ApplicationRead(BaseModel):
     fit_score: float | None
     fit_confidence: float | None
     explanation: dict
+    human_decision_reason: str | None
     created_at: datetime
+    updated_at: datetime
+
+
+class ResumeAnalysisRequest(BaseModel):
+    text: str = Field(min_length=80, max_length=100_000)
+    persist_evidence: bool = False
+
+
+class SkillSignal(BaseModel):
+    skill: str
+    confidence: float = Field(ge=0, le=1)
+    evidence_excerpt: str
+
+
+class ResumeAnalysisResult(BaseModel):
+    skills: list[SkillSignal]
+    experience_years: float | None
+    experience_signals: list[str]
+    project_signals: list[str]
+    summary: str
+    quality_warnings: list[str]
+    excluded_fields: list[str]
+    model_version: str
+
+
+class JobAnalysisRequest(BaseModel):
+    title: str = Field(min_length=2, max_length=200)
+    description: str = Field(min_length=40, max_length=100_000)
+
+
+class JobAnalysisResult(BaseModel):
+    title: str
+    summary: str
+    requirements: list[RequirementInput]
+    responsibilities: list[str]
+    quality_warnings: list[str]
+    model_version: str
+
+
+class JobRecommendation(BaseModel):
+    job_id: str
+    title: str
+    company: str
+    location: str
+    rank_score: float
+    match: MatchResult
+
+
+class AssessmentQuestion(BaseModel):
+    id: str
+    competency: str
+    prompt: str
+    options: list[str]
+    difficulty: Literal["foundation", "applied", "advanced"]
+    manual_review: bool = False
+
+
+class AssessmentAttemptRead(BaseModel):
+    id: str
+    job_id: str
+    status: str
+    questions: list[AssessmentQuestion]
+    model_version: str
+    started_at: datetime
+
+
+class AssessmentSubmit(BaseModel):
+    answers: dict[str, str]
+
+
+class AssessmentResult(BaseModel):
+    id: str
+    status: str
+    score: float
+    competency_scores: dict[str, float]
+    feedback: list[str]
+    integrity_flags: list[str]
+    completed_at: datetime
+    model_version: str
+
+
+class InterviewQuestion(BaseModel):
+    id: str
+    competency: str
+    prompt: str
+    evaluation_criteria: list[str]
+
+
+class InterviewSessionRead(BaseModel):
+    id: str
+    job_id: str
+    status: str
+    questions: list[InterviewQuestion]
+    notice: str
+    model_version: str
+
+
+class InterviewSubmit(BaseModel):
+    answers: dict[str, str]
+
+
+class InterviewResult(BaseModel):
+    id: str
+    status: str
+    content_score: float
+    rubric_scores: dict[str, float]
+    feedback: list[str]
+    human_review_required: bool = True
+    model_version: str
+
+
+class ApplicationStatusUpdate(BaseModel):
+    status: ApplicationStatus
+    reason: str = Field(min_length=10, max_length=2_000)
+
+
+class RecruiterApplicationRead(ApplicationRead):
+    job_title: str
+    candidate_label: str
+
+
+class PlatformMetrics(BaseModel):
+    users: int
+    candidates: int
+    recruiters: int
+    published_jobs: int
+    applications: int
+    completed_assessments: int
+    completed_mock_interviews: int
+    audit_events: int
+    live_connections: int
+    model_version: str
+    evaluation_state: Literal["dataset_required", "evaluating", "approved"]

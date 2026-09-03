@@ -1,5 +1,6 @@
 from app.models.entities import (
     Application,
+    ApplicationStageHistory,
     AssessmentAttempt,
     AuditEvent,
     Base,
@@ -13,6 +14,7 @@ from app.models.entities import (
 
 __all__ = [
     "Application",
+    "ApplicationStageHistory",
     "AssessmentAttempt",
     "AuditEvent",
     "Base",
@@ -23,4 +25,3 @@ __all__ = [
     "Recommendation",
     "User",
 ]
-

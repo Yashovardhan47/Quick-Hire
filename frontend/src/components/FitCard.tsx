@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 type FitCardProps = {
   role: string;
   company: string;
@@ -5,9 +7,10 @@ type FitCardProps = {
   confidence: number;
   strengths: string[];
   gaps: string[];
+  actions?: ReactNode;
 };
 
-export default function FitCard({ role, company, score, confidence, strengths, gaps }: FitCardProps) {
+export default function FitCard({ role, company, score, confidence, strengths, gaps, actions }: FitCardProps) {
   return (
     <article className="fit-card">
       <div className="fit-card-head">
@@ -20,8 +23,7 @@ export default function FitCard({ role, company, score, confidence, strengths, g
         <div><h4>Supported</h4>{strengths.map(x => <span className="chip good" key={x}>{x}</span>)}</div>
         <div><h4>Verify next</h4>{gaps.map(x => <span className="chip warn" key={x}>{x}</span>)}</div>
       </div>
-      <button className="primary">Open evidence map</button>
+      {actions ?? <button className="primary">Open evidence map</button>}
     </article>
   );
 }
-

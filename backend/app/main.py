@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import applications, auth, candidates, jobs, matching, realtime
+from app.api.routes import admin, applications, assessments, auth, candidates, intelligence, interviews, jobs, matching, realtime, recommendations
 from app.core.config import get_settings
 from app.db.session import engine
 from app.models import Base
@@ -25,7 +25,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.1.0",
+    version="0.2.0",
     description="Explainable recruitment intelligence with human-owned employment decisions.",
     lifespan=lifespan,
 )
@@ -42,10 +42,14 @@ app.include_router(candidates.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
 app.include_router(matching.router, prefix="/api/v1")
 app.include_router(applications.router, prefix="/api/v1")
+app.include_router(intelligence.router, prefix="/api/v1")
+app.include_router(recommendations.router, prefix="/api/v1")
+app.include_router(assessments.router, prefix="/api/v1")
+app.include_router(interviews.router, prefix="/api/v1")
+app.include_router(admin.router, prefix="/api/v1")
 app.include_router(realtime.router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["system"])
 async def health() -> dict:
-    return {"status": "ok", "service": "quickhire-evidencegraph", "version": "0.1.0"}
-
+    return {"status": "ok", "service": "quickhire-evidencegraph", "version": "0.2.0"}
