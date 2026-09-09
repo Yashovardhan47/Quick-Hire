@@ -26,6 +26,7 @@ async def create_admin() -> None:
                 full_name=full_name,
                 password_hash=hash_password(password),
                 role=UserRole.admin,
+                email_verified=True,
             )
         )
         await db.commit()

@@ -25,7 +25,15 @@ ALLOWED_TRANSITIONS: dict[ApplicationStatus, set[ApplicationStatus]] = {
 }
 
 
-def validate_transition(current: ApplicationStatus, target: ApplicationStatus) -> None:
+def validate_transition(
+    current: ApplicationStatus,
+    target: ApplicationStatus,
+    *,
+    human_confirmed: bool = False,
+    evidence_reviewed: bool = False,
+) -> None:
+    if not human_confirmed or not evidence_reviewed:
+        raise ValueError("A recruiter must confirm both human ownership and job-related evidence review")
     if target == current:
         raise ValueError("Application is already in that stage")
     if target not in ALLOWED_TRANSITIONS[current]:

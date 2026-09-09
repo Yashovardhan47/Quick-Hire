@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from app.services.ai_policy import safe_requirements
 from app.services.evidence_graph import normalize, skill_similarity
 
 
@@ -133,7 +134,7 @@ def _question_for(competency: str) -> dict | None:
 def build_assessment(requirements: list[dict], coverage: dict[str, float] | None = None, limit: int = 5) -> list[dict]:
     coverage = coverage or {}
     ordered = sorted(
-        requirements,
+        safe_requirements(requirements),
         key=lambda item: (
             coverage.get(normalize(str(item.get("name", ""))), 0.0),
             -float(item.get("weight", 1.0)),

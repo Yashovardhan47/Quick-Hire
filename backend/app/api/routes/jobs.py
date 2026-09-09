@@ -6,6 +6,7 @@ from app.api.dependencies import require_roles
 from app.db.session import get_db
 from app.models.entities import AuditEvent, Job, UserRole
 from app.schemas.api import JobCreate, JobRead
+from app.services.ai_policy import PolicyViolation, require_job_related_text
 
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -45,6 +46,25 @@ async def create_job(
     identity: dict = Depends(require_roles(UserRole.recruiter, UserRole.admin)),
     db: AsyncSession = Depends(get_db),
 ) -> Job:
+    try:
+        require_job_related_text(
+            "Job and competency rubric",
+            payload.title,
+            payload.description,
+            *(requirement.name for requirement in payload.requirements),
+        )
+    except PolicyViolation as exc:
+        db.add(
+            AuditEvent(
+                actor_id=identity["sub"],
+                action="prohibited_job_criteria_blocked",
+                resource_type="job_draft",
+                resource_id=None,
+                details={"policy_categories": exc.categories},
+            )
+        )
+        await db.commit()
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     job = Job(recruiter_id=identity["sub"], **payload.model_dump(mode="json"))
     db.add(job)
     await db.flush()

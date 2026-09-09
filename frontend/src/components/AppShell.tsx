@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { Bell, BrainCircuit, BriefcaseBusiness, LogOut, ShieldCheck, UserRoundSearch } from "lucide-react";
+import { Bell, BrainCircuit, BriefcaseBusiness, KeyRound, LogOut, ShieldCheck, UserRoundSearch } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { clearSession, eventSocketUrl, getSession } from "../lib/api";
+import { eventSocketUrl, getSession, logoutSession } from "../lib/api";
 
 const links = [
   { to: "/candidate", label: "Candidate", icon: UserRoundSearch },
   { to: "/recruiter", label: "Recruiter", icon: BriefcaseBusiness },
   { to: "/admin", label: "Platform admin", icon: ShieldCheck },
+  { to: "/account", label: "Account & safety", icon: KeyRound },
 ];
 
 export default function AppShell() {
@@ -15,7 +16,7 @@ export default function AppShell() {
   const user = session?.user;
   const [events, setEvents] = useState<{ type: string; status?: string; score?: number }[]>([]);
   const [showEvents, setShowEvents] = useState(false);
-  const visibleLinks = links.filter(link => link.to === `/${user?.role}`);
+  const visibleLinks = links.filter(link => link.to === `/${user?.role}` || link.to === "/account");
 
   useEffect(() => {
     if (!session) return;
@@ -27,8 +28,8 @@ export default function AppShell() {
     return () => socket.close();
   }, [session?.access_token]);
 
-  function logout() {
-    clearSession();
+  async function logout() {
+    await logoutSession();
     navigate("/login");
   }
 
@@ -48,7 +49,7 @@ export default function AppShell() {
           <ShieldCheck size={18} />
           <p>AI explains evidence. People make hiring decisions.</p>
         </div>
-        <button className="logout-button" onClick={logout}><LogOut size={17} /> Sign out</button>
+        <button className="logout-button" onClick={() => void logout()}><LogOut size={17} /> Sign out</button>
       </aside>
       <main>
         <header className="topbar">

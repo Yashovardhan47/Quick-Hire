@@ -41,10 +41,33 @@ class User(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
     full_name: Mapped[str] = mapped_column(String(160))
-    password_hash: Mapped[str] = mapped_column(String(255))
+    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    google_subject: Mapped[str | None] = mapped_column(String(255), unique=True, index=True, nullable=True)
+    google_linked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    @property
+    def google_linked(self) -> bool:
+        return self.google_subject is not None
+
+
+class RefreshSession(Base):
+    __tablename__ = "refresh_sessions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    replaced_by_session_id: Mapped[str | None] = mapped_column(
+        ForeignKey("refresh_sessions.id", ondelete="SET NULL"), nullable=True
+    )
 
 
 class CandidateProfile(Base):
@@ -136,6 +159,8 @@ class ApplicationStageHistory(Base):
     to_status: Mapped[str] = mapped_column(String(40), index=True)
     actor_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     reason: Mapped[str] = mapped_column(Text)
+    human_confirmed: Mapped[bool] = mapped_column(Boolean, default=True)
+    decision_source: Mapped[str] = mapped_column(String(40), default="human_actor")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 

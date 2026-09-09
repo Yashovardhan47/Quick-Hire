@@ -1,6 +1,7 @@
 import re
 from collections import defaultdict
 
+from app.services.ai_policy import safe_requirements
 
 MODEL_VERSION = "structured-interview-0.2.0"
 NOTICE = (
@@ -10,7 +11,7 @@ NOTICE = (
 
 
 def build_interview(requirements: list[dict], limit: int = 5) -> list[dict]:
-    ordered = sorted(requirements, key=lambda item: -float(item.get("weight", 1.0)))
+    ordered = sorted(safe_requirements(requirements), key=lambda item: -float(item.get("weight", 1.0)))
     questions = []
     for index, requirement in enumerate(ordered[:limit], start=1):
         competency = str(requirement.get("name", "")).strip()

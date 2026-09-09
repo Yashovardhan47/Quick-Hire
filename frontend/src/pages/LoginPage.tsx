@@ -1,6 +1,7 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useCallback, useState } from "react";
 import { BrainCircuit, ShieldCheck, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import GoogleIdentityButton from "../components/GoogleIdentityButton";
 import { api, saveSession, Session, UserRole } from "../lib/api";
 
 const homeFor = (role: UserRole) => `/${role}`;
@@ -33,6 +34,23 @@ export default function LoginPage() {
     }
   }
 
+  const continueWithGoogle = useCallback(async (credential: string) => {
+    setWorking(true);
+    setError("");
+    try {
+      const session = await api<Session>("/auth/google", {
+        method: "POST",
+        body: JSON.stringify({ credential, mode, role: mode === "register" ? role : null }),
+      });
+      saveSession(session);
+      navigate(homeFor(session.user.role));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Google sign-in failed");
+    } finally {
+      setWorking(false);
+    }
+  }, [mode, navigate, role]);
+
   return (
     <main className="auth-page">
       <section className="auth-story">
@@ -63,6 +81,9 @@ export default function LoginPage() {
           <label>Password<input type="password" value={password} onChange={event => setPassword(event.target.value)} minLength={10} required /></label>
           {error && <div className="form-error" role="alert">{error}</div>}
           <button className="primary wide" disabled={working}>{working ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}</button>
+          <div className="auth-divider"><span>or</span></div>
+          {!working && <GoogleIdentityButton onCredential={continueWithGoogle} text={mode === "login" ? "signin_with" : "signup_with"} />}
+          <p className="auth-safety-note">Google accounts can create job-seeker or recruiter access only. Platform-admin access remains separately controlled.</p>
           <button type="button" className="text-button auth-switch" onClick={() => setMode(mode === "login" ? "register" : "login")}>
             {mode === "login" ? "New to QuickHire? Create an account" : "Already have an account? Sign in"}
           </button>

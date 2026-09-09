@@ -19,6 +19,8 @@ class UserRead(BaseModel):
     email: EmailStr
     full_name: str
     role: UserRole
+    email_verified: bool
+    google_linked: bool
 
 
 class LoginRequest(BaseModel):
@@ -29,7 +31,25 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    expires_in: int
     user: UserRead
+
+
+class GoogleAuthRequest(BaseModel):
+    credential: str = Field(min_length=100, max_length=10_000)
+    mode: Literal["login", "register"] = "login"
+    role: Literal[UserRole.candidate, UserRole.recruiter] | None = None
+
+
+class GoogleLinkRequest(BaseModel):
+    credential: str = Field(min_length=100, max_length=10_000)
+
+
+class AuthMethodsRead(BaseModel):
+    email: EmailStr
+    password_enabled: bool
+    google_linked: bool
+    email_verified: bool
 
 
 class RequirementInput(BaseModel):
@@ -262,6 +282,8 @@ class InterviewResult(BaseModel):
 class ApplicationStatusUpdate(BaseModel):
     status: ApplicationStatus
     reason: str = Field(min_length=10, max_length=2_000)
+    human_confirmed: Literal[True]
+    evidence_reviewed: Literal[True]
 
 
 class RecruiterApplicationRead(ApplicationRead):
@@ -282,3 +304,12 @@ class PlatformMetrics(BaseModel):
     live_connections: int
     model_version: str
     evaluation_state: Literal["dataset_required", "evaluating", "approved"]
+
+
+class AIPolicyRead(BaseModel):
+    version: str
+    decision_authority: Literal["human_recruiter_only"]
+    interview_input_mode: Literal["typed_answer_content_only"]
+    autonomous_stage_changes_allowed: Literal[False]
+    prohibited_signal_categories: list[str]
+    enforcement_points: list[str]

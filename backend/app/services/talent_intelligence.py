@@ -1,5 +1,7 @@
 import re
 
+from app.services.ai_policy import prohibited_categories, scrub_prohibited_text
+
 
 MODEL_VERSION = "multilingual-talent-normalizer-0.3.0"
 
@@ -58,7 +60,8 @@ def _contains_alias(text: str, alias: str) -> bool:
 
 def _redact_contact_details(text: str) -> str:
     text = re.sub(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", "[email removed]", text, flags=re.I)
-    return re.sub(r"(?<!\d)(?:\+?\d[\s().-]*){10,14}(?!\d)", "[phone removed]", text)
+    text = re.sub(r"(?<!\d)(?:\+?\d[\s().-]*){10,14}(?!\d)", "[phone removed]", text)
+    return scrub_prohibited_text(text)[0]
 
 
 def _excerpt(text: str, aliases: tuple[str, ...]) -> str:
@@ -131,6 +134,8 @@ def analyze_resume(text: str, segments: list[dict[str, str]] | None = None) -> d
         warnings.append("No skills matched the current controlled taxonomy; add them manually for review.")
     if not project_signals:
         warnings.append("No project evidence was detected; measurable project outcomes would improve confidence.")
+    if prohibited_categories(text):
+        warnings.append("Sensitive or prohibited signals were excluded and cannot affect matching or interview feedback.")
 
     years_phrase = f" and up to {experience_years:g} years of stated experience" if experience_years is not None else ""
     return {
@@ -177,6 +182,9 @@ def analyze_job_description(title: str, description: str) -> dict:
     for phrase, guidance in discouraged.items():
         if phrase in lowered:
             warnings.append(f"Review phrase ‘{phrase}’. {guidance}")
+    for category in prohibited_categories(f"{title}\n{description}"):
+        label = category.replace("_", " ")
+        warnings.append(f"Remove {label} criteria. QuickHire blocks them from jobs and AI evaluation.")
     if not requirements:
         warnings.append("No competencies matched the controlled taxonomy; a recruiter must add job-related requirements.")
     if not responsibilities:

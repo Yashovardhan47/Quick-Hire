@@ -41,6 +41,7 @@ services:
     build: ./frontend
     environment:
       VITE_API_URL: http://localhost:8000/api/v1
+      VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     ports:
       - "5173:5173"
     depends_on:
@@ -48,4 +49,3 @@ services:
 
 volumes:
   quickhire_postgres:
-

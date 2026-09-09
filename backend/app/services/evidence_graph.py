@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 
 from app.schemas.api import MatchResult, RequirementMatch
+from app.services.ai_policy import safe_evidence_items, safe_feature_names, safe_requirements
 
 
 MODEL_VERSION = "evidencegraph-baseline-0.1.0"
@@ -39,8 +40,9 @@ def calculate_match(
     profile_skills: Iterable[str],
     evidence_items: Iterable[EvidenceItem],
 ) -> MatchResult:
-    profile = [normalize(skill) for skill in profile_skills]
-    evidence = list(evidence_items)
+    requirements = safe_requirements(requirements)
+    profile = [normalize(skill) for skill in safe_feature_names(profile_skills)]
+    evidence = safe_evidence_items(evidence_items)
     rows: list[RequirementMatch] = []
     weighted_coverage = 0.0
     weighted_confidence = 0.0

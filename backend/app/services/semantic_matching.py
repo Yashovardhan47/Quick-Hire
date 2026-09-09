@@ -7,6 +7,7 @@ from collections.abc import Iterable
 import httpx
 
 from app.schemas.api import EvidenceCitation, MatchResult
+from app.services.ai_policy import safe_evidence_items, safe_feature_names, safe_requirements, scrub_prohibited_text
 from app.services.evidence_graph import EvidenceItem, calculate_match, skill_similarity
 from app.services.model_providers import cross_encoder_score, embedding_similarity
 from app.services.talent_intelligence import SKILL_TAXONOMY
@@ -89,8 +90,10 @@ def calculate_hybrid_match(
     reranker_override: float | None = None,
     retrieval_mode: str = "local_multilingual_feature_hash",
 ) -> MatchResult:
-    skills = list(profile_skills)
-    evidence = list(evidence_items)
+    job_description = scrub_prohibited_text(job_description)[0]
+    requirements = safe_requirements(requirements)
+    skills = safe_feature_names(profile_skills)
+    evidence = safe_evidence_items(evidence_items)
     baseline = calculate_match(requirements, skills, evidence)
     local_semantic = cosine_similarity(
         feature_hash_embedding(_job_text(job_description, requirements)),
@@ -151,8 +154,10 @@ async def calculate_configured_hybrid_match(
     evidence_items: Iterable[EvidenceItem],
     settings,
 ) -> MatchResult:
-    skills = list(profile_skills)
-    evidence = list(evidence_items)
+    job_description = scrub_prohibited_text(job_description)[0]
+    requirements = safe_requirements(requirements)
+    skills = safe_feature_names(profile_skills)
+    evidence = safe_evidence_items(evidence_items)
     if not (
         settings.external_model_data_processing_enabled
         and settings.ai_api_key

@@ -13,3 +13,16 @@ def test_interview_uses_disclosed_content_rubric_and_requires_human_review() -> 
     assert result["content_score"] > 70
     assert result["human_review_required"] is True
     assert "does not analyze face, voice, accent, emotion" in NOTICE
+    assert "personality, disability or honesty" in NOTICE
+
+
+def test_prohibited_requirement_cannot_generate_an_interview_question() -> None:
+    questions = build_interview(
+        [
+            {"name": "Python", "weight": 2, "mandatory": True},
+            {"name": "voice and accent", "weight": 10, "mandatory": True},
+            {"name": "personality", "weight": 10, "mandatory": True},
+        ]
+    )
+
+    assert [question["competency"] for question in questions] == ["Python"]

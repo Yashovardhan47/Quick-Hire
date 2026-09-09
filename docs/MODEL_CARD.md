@@ -1,4 +1,4 @@
-# QuickHire EvidenceGraph 0.3 Model Card
+# QuickHire EvidenceGraph 0.3 Model Card · Platform controls 0.4
 
 ## Intended use
 
@@ -38,3 +38,5 @@ Before production, evaluate on representative, time-separated job and candidate 
 ## Required controls
 
 Candidate notice, consent for external processing, correction and appeal paths, accommodations, data retention and deletion, access logging, independent security review, model/version rollback and periodic drift/fairness audits are required before consequential use.
+
+Platform release 0.4 implements input blocking, ranking sanitation, typed-content-only interview generation, human stage confirmations and an administrator-readable policy manifest. Candidate appeal, accommodation and deletion workflows, representative validation and independent audits remain pre-production requirements.

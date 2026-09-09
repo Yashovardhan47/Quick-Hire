@@ -49,6 +49,15 @@ Protected attributes may be used only in separated, access-controlled audit data
 9. **Next:** isolated coding assessments, interview scheduling, communication, appeals and accommodations
 10. **Before production:** model validation, drift, penetration testing and independent fairness audits
 
+## 0.4 authentication and enforcement
+
+- Access JWTs are short-lived and constrained by token type, issuer and audience.
+- Opaque refresh credentials rotate on every use, are stored only as SHA-256 digests and revoke the active session family if an already-rotated token is replayed.
+- Google ID tokens are verified on the backend and linked by Google's stable subject identifier. Matching an email alone never links an existing account.
+- Candidate and recruiter accounts may use Google; platform administrators cannot be created or linked through Google.
+- Prohibited criteria are blocked at structured input routes and removed again before matching, including before optional external model calls.
+- Recruiter pipeline transitions require explicit job-evidence review, human confirmation and a reason stored in stage history and the audit log.
+
 ## 0.2 workflow architecture
 
 - `talent_intelligence.py` normalizes resume and job text into a controlled skill taxonomy. Resume claims are unverified until supported by platform or human-reviewed evidence.

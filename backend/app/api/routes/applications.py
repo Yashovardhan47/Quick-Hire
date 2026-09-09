@@ -42,6 +42,8 @@ async def apply(
                 to_status=application.status.value,
                 actor_id=identity["sub"],
                 reason="Candidate submitted the application.",
+                human_confirmed=True,
+                decision_source="candidate_application",
             )
         )
         db.add(
@@ -118,7 +120,12 @@ async def update_application_status(
     if not job or job.recruiter_id != identity["sub"]:
         raise HTTPException(status_code=404, detail="Application not found")
     try:
-        validate_transition(application.status, payload.status)
+        validate_transition(
+            application.status,
+            payload.status,
+            human_confirmed=payload.human_confirmed,
+            evidence_reviewed=payload.evidence_reviewed,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
@@ -132,6 +139,8 @@ async def update_application_status(
             to_status=payload.status.value,
             actor_id=identity["sub"],
             reason=payload.reason,
+            human_confirmed=True,
+            decision_source="human_recruiter",
         )
     )
     db.add(
@@ -144,6 +153,9 @@ async def update_application_status(
                 "from_status": previous.value,
                 "to_status": payload.status.value,
                 "human_reason_recorded": True,
+                "human_confirmed": True,
+                "evidence_reviewed": True,
+                "decision_source": "human_recruiter",
             },
         )
     )

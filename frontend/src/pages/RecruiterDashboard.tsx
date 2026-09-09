@@ -45,6 +45,8 @@ export default function RecruiterDashboard() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [targetStage, setTargetStage] = useState("");
   const [decisionReason, setDecisionReason] = useState("");
+  const [humanConfirmed, setHumanConfirmed] = useState(false);
+  const [evidenceReviewed, setEvidenceReviewed] = useState(false);
   const [message, setMessage] = useState("");
   const [working, setWorking] = useState(false);
 
@@ -71,6 +73,12 @@ export default function RecruiterDashboard() {
 
   useEffect(() => { void loadJobs(); }, [loadJobs]);
   useEffect(() => { void loadApplications(selectedJobId); }, [selectedJobId, loadApplications]);
+  useEffect(() => {
+    setTargetStage("");
+    setDecisionReason("");
+    setHumanConfirmed(false);
+    setEvidenceReviewed(false);
+  }, [selectedApplication?.id]);
 
   async function analyze(event: FormEvent) {
     event.preventDefault();
@@ -115,10 +123,15 @@ export default function RecruiterDashboard() {
     try {
       await api(`/applications/${selectedApplication.id}/status`, {
         method: "PATCH",
-        body: JSON.stringify({ status: targetStage, reason: decisionReason }),
+        body: JSON.stringify({
+          status: targetStage,
+          reason: decisionReason,
+          human_confirmed: humanConfirmed,
+          evidence_reviewed: evidenceReviewed,
+        }),
       });
       setMessage("Stage changed and the human reason was added to the audit trail.");
-      setTargetStage(""); setDecisionReason("");
+      setTargetStage(""); setDecisionReason(""); setHumanConfirmed(false); setEvidenceReviewed(false);
       await loadApplications(selectedJobId);
     } catch (reason) {
       setMessage(reason instanceof Error ? reason.message : "Unable to change stage");
@@ -186,6 +199,8 @@ export default function RecruiterDashboard() {
             {(nextStages[selectedApplication.status]?.length ?? 0) > 0 && <form className="decision-form" onSubmit={moveApplication}>
               <label>Move to<select value={targetStage} onChange={event => setTargetStage(event.target.value)} required><option value="">Select next stage</option>{nextStages[selectedApplication.status].map(stage => <option key={stage} value={stage}>{stageLabel(stage)}</option>)}</select></label>
               <label>Human decision reason<textarea value={decisionReason} onChange={event => setDecisionReason(event.target.value)} minLength={10} placeholder="Record job-related evidence and reasoning…" required /></label>
+              <label className="confirmation-check"><input type="checkbox" checked={evidenceReviewed} onChange={event => setEvidenceReviewed(event.target.checked)} required /> I reviewed the job-related evidence and uncertainty shown above.</label>
+              <label className="confirmation-check"><input type="checkbox" checked={humanConfirmed} onChange={event => setHumanConfirmed(event.target.checked)} required /> I am making this stage decision as the responsible human recruiter.</label>
               <button className="primary" disabled={working}>Record stage change</button>
             </form>}
           </> : <div className="empty-state"><UsersRound /><h3>No candidate selected</h3><p>Select an applicant to inspect evidence and record a human-owned next step.</p></div>}
