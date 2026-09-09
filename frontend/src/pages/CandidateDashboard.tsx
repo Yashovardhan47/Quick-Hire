@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { ArrowUpRight, FileCheck2, MessagesSquare, ScanSearch, Target } from "lucide-react";
+import { ArrowUpRight, FileCheck2, FileText, MessagesSquare, ScanSearch, Target, UploadCloud } from "lucide-react";
 import { Link } from "react-router-dom";
 import FitCard from "../components/FitCard";
 import { api } from "../lib/api";
@@ -16,15 +16,34 @@ type Recommendation = {
   match: {
     score: number;
     confidence: number;
+    score_low: number;
+    score_high: number;
     requirements: MatchRequirement[];
     missing_requirements: string[];
     next_best_actions: string[];
+    ranking_features: Record<string, number>;
+    confidence_status: string;
+    abstained: boolean;
+    abstention_reason: string | null;
+    evidence_citations: { requirement: string; source_uri: string; excerpt: string; verified: boolean }[];
   };
 };
 type ResumeResult = {
-  skills: { skill: string; confidence: number; evidence_excerpt: string }[];
+  skills: { skill: string; confidence: number; evidence_excerpt: string; source_locator?: string | null }[];
   summary: string;
   quality_warnings: string[];
+  language_codes: string[];
+};
+type DocumentResult = {
+  document_id: string | null;
+  filename: string;
+  page_count: number;
+  text_length: number;
+  language_codes: string[];
+  security_flags: string[];
+  duplicate: boolean;
+  retention_notice: string;
+  analysis: ResumeResult;
 };
 
 export default function CandidateDashboard() {
@@ -33,6 +52,8 @@ export default function CandidateDashboard() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [resumeText, setResumeText] = useState("");
   const [resumeResult, setResumeResult] = useState<ResumeResult | null>(null);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [documentResult, setDocumentResult] = useState<DocumentResult | null>(null);
   const [message, setMessage] = useState("");
   const [working, setWorking] = useState(false);
 
@@ -63,6 +84,27 @@ export default function CandidateDashboard() {
       await loadWorkspace();
     } catch (reason) {
       setMessage(reason instanceof Error ? reason.message : "Resume analysis failed");
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  async function uploadResume(event: FormEvent) {
+    event.preventDefault();
+    if (!resumeFile) return;
+    setWorking(true);
+    setMessage("");
+    const form = new FormData();
+    form.append("file", resumeFile);
+    form.append("persist_evidence", "true");
+    try {
+      const result = await api<DocumentResult>("/intelligence/resume/upload", { method: "POST", body: form });
+      setDocumentResult(result);
+      setResumeResult(result.analysis);
+      setMessage(result.duplicate ? "This document was already analyzed; its existing evidence was reused." : "Document analyzed and provenance-linked evidence added.");
+      await loadWorkspace();
+    } catch (reason) {
+      setMessage(reason instanceof Error ? reason.message : "Document analysis failed");
     } finally {
       setWorking(false);
     }
@@ -109,6 +151,11 @@ export default function CandidateDashboard() {
                 company={`${item.company}${item.location ? ` · ${item.location}` : ""}`}
                 score={item.match.score}
                 confidence={Math.round(item.match.confidence * 100)}
+                scoreRange={[item.match.score_low, item.match.score_high]}
+                confidenceStatus={item.match.confidence_status}
+                rankingFeatures={item.match.ranking_features}
+                citationCount={item.match.evidence_citations.length}
+                abstained={item.match.abstained}
                 strengths={strengths.slice(0, 5)}
                 gaps={item.match.missing_requirements.slice(0, 5)}
                 actions={<div className="button-row">
@@ -130,12 +177,22 @@ export default function CandidateDashboard() {
       </div>
 
       <article className="panel resume-panel" id="resume-intelligence">
-        <div className="subheading"><div><span className="eyebrow">RESUME INTELLIGENCE</span><h3>Turn resume text into reviewable evidence</h3></div><span className="safe-badge">Sensitive fields excluded</span></div>
-        <form onSubmit={analyzeResume}>
-          <label>Resume text<textarea value={resumeText} onChange={event => setResumeText(event.target.value)} minLength={80} placeholder="Paste your experience, projects, skills and measurable outcomes…" required /></label>
-          <div className="form-footer"><p>Raw resume text is analyzed in the request and is not saved by this endpoint.</p><button className="primary" disabled={working}>{working ? "Analyzing…" : "Extract evidence"}</button></div>
-        </form>
-        {resumeResult && <div className="analysis-result"><strong>{resumeResult.summary}</strong><div>{resumeResult.skills.map(item => <span className="chip good" key={item.skill}>{item.skill} · {Math.round(item.confidence * 100)}%</span>)}</div>{resumeResult.quality_warnings.map(warning => <p key={warning}>{warning}</p>)}</div>}
+        <div className="subheading"><div><span className="eyebrow">DOCUMENT INTELLIGENCE</span><h3>Turn a resume into provenance-linked evidence</h3></div><span className="safe-badge">Sensitive fields excluded</span></div>
+        <div className="resume-input-grid">
+          <form className="upload-card" onSubmit={uploadResume}>
+            <UploadCloud size={28} />
+            <h4>Upload resume</h4>
+            <p>PDF, DOCX or TXT · maximum 5 MB · up to 30 PDF pages</p>
+            <label className="file-picker"><input type="file" accept=".pdf,.docx,.txt" onChange={event => setResumeFile(event.target.files?.[0] ?? null)} required /><span>{resumeFile?.name ?? "Choose document"}</span></label>
+            <button className="primary" disabled={working || !resumeFile}>{working ? "Analyzing…" : "Extract with provenance"}</button>
+          </form>
+          <form className="paste-card" onSubmit={analyzeResume}>
+            <label>Or paste resume text<textarea value={resumeText} onChange={event => setResumeText(event.target.value)} minLength={80} placeholder="Paste experience, projects, skills and measurable outcomes…" required /></label>
+            <button className="secondary" disabled={working}>{working ? "Analyzing…" : "Analyze pasted text"}</button>
+          </form>
+        </div>
+        {documentResult && <div className="document-receipt"><FileText /><div><strong>{documentResult.filename}</strong><p>{documentResult.page_count} page(s) · {documentResult.text_length.toLocaleString()} extracted characters · languages {documentResult.language_codes.join(", ")}</p><small>{documentResult.retention_notice}</small></div>{documentResult.security_flags.length > 0 && <span className="status warning">{documentResult.security_flags.length} review flag(s)</span>}</div>}
+        {resumeResult && <div className="analysis-result"><strong>{resumeResult.summary}</strong><p>Language signals: {resumeResult.language_codes.join(", ")}</p><div>{resumeResult.skills.map(item => <span className="chip good" key={item.skill}>{item.skill} · {Math.round(item.confidence * 100)}%{item.source_locator ? ` · ${item.source_locator.replace(":", " ")}` : ""}</span>)}</div>{resumeResult.quality_warnings.map(warning => <p key={warning}>{warning}</p>)}</div>}
       </article>
     </section>
   );

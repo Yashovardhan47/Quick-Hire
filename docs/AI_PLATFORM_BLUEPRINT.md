@@ -44,9 +44,10 @@ Protected attributes may be used only in separated, access-controlled audit data
 4. **Implemented baseline:** adaptive objective tests; isolated coding sandbox remains planned
 5. **Implemented baseline:** structured typed mock interviews with disclosed content rubrics
 6. **Implemented baseline:** grounded candidate next actions and recruiter review assistance
-7. **Next:** embedding retrieval, calibrated reranking and resume file ingestion
-8. **Next:** interview scheduling, communication, appeals and accommodations
-9. **Before production:** representative evaluation dataset, model cards, drift, security and independent fairness audits
+7. **Implemented 0.3 foundation:** secure resume files, multilingual vector retrieval, optional embedding/cross-encoder adapters, provenance and abstention
+8. **Next:** fit confidence on a representative labeled dataset and replace baseline weights only when evaluation improves
+9. **Next:** isolated coding assessments, interview scheduling, communication, appeals and accommodations
+10. **Before production:** model validation, drift, penetration testing and independent fairness audits
 
 ## 0.2 workflow architecture
 
@@ -59,11 +60,19 @@ Protected attributes may be used only in separated, access-controlled audit data
 
 ## Accuracy roadmap
 
-The deterministic 0.2 baseline is deliberately testable and explainable. Higher accuracy should be added as a measured hybrid, not as an opaque replacement:
+The 0.3 hybrid baseline is deliberately testable and explainable. Higher accuracy should be added through measured replacements, not opaque assumptions:
 
-1. Parse PDFs and DOCX files in an isolated ingestion worker with prompt-injection and malware defenses.
-2. Retrieve competencies with multilingual embeddings, then rerank only job-related evidence with a cross-encoder.
-3. Calibrate confidence on a representative validation set and abstain when evidence is sparse or out of distribution.
-4. Compare keyword, embedding-only and EvidenceGraph variants using NDCG@K, Brier score, explanation citation accuracy and recruiter override rate.
+1. Add an isolated OCR and malware-scanning worker for image-only resumes.
+2. Benchmark configured multilingual embedding and cross-encoder models against the local vector baseline.
+3. Fit and version confidence calibration on a representative, time-separated validation set.
+4. Compare keyword, embedding-only and EvidenceGraph variants using NDCG@K, Brier score, citation accuracy and recruiter override rate.
 5. Add a sandboxed coding service with fixed tests, resource limits and no network access.
-6. Publish model cards, data lineage, subgroup error analysis and candidate recourse results before consequential deployment.
+6. Publish data lineage, subgroup error analysis and candidate recourse results before consequential deployment.
+
+## 0.3 hybrid retrieval
+
+The default local path creates a privacy-preserving hashed feature vector from Unicode words, adjacent word features and canonical multilingual skill aliases. It blends three visible signals: structured EvidenceGraph coverage, vector similarity and a cross-feature reranker. This path is deterministic and works without sending candidate data outside the deployment.
+
+Deployments may opt into compatible external embedding and cross-encoder endpoints. External processing is off by default, requires an explicit feature flag and falls back to the local path on provider failure. Provider output can influence ordering, but it cannot remove missing mandatory evidence, convert unverified claims into verified evidence or make an employment decision.
+
+Confidence is not described as calibrated until a labeled validation set exists. Low-evidence cases abstain, other cases show an uncertainty interval and confidence state, and the offline evaluation command reports ranking quality, probability error and coverage.

@@ -17,6 +17,15 @@ class Settings(BaseSettings):
     auto_create_tables: bool = True
     ai_provider: str = "local"
     ai_api_key: str | None = None
+    external_model_data_processing_enabled: bool = False
+    embedding_api_url: str | None = None
+    embedding_model: str = "multilingual-embedding-model"
+    reranker_api_url: str | None = None
+    reranker_model: str = "cross-encoder-reranker"
+    ai_request_timeout_seconds: float = 8.0
+    max_resume_bytes: int = 5_242_880
+    max_resume_pages: int = 30
+    max_resume_characters: int = 100_000
 
     @property
     def cors_origins(self) -> list[str]:
@@ -26,4 +35,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

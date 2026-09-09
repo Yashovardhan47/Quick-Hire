@@ -11,7 +11,15 @@ type Application = {
   status: string;
   fit_score: number | null;
   fit_confidence: number | null;
-  explanation: { missing_requirements?: string[]; next_best_actions?: string[] };
+  explanation: {
+    missing_requirements?: string[];
+    next_best_actions?: string[];
+    ranking_features?: Record<string, number>;
+    confidence_status?: string;
+    abstained?: boolean;
+    abstention_reason?: string | null;
+    evidence_citations?: { requirement: string; source_uri: string; excerpt: string; verified: boolean }[];
+  };
   human_decision_reason: string | null;
 };
 
@@ -169,8 +177,11 @@ export default function RecruiterDashboard() {
           {selectedApplication ? <>
             <span className="eyebrow">EVIDENCE REVIEW</span><h3>{selectedApplication.candidate_label}</h3>
             <div className="fit-summary"><strong>{Math.round(selectedApplication.fit_score ?? 0)}%</strong><span>fit</span><strong>{Math.round((selectedApplication.fit_confidence ?? 0) * 100)}%</strong><span>confidence</span></div>
+            {selectedApplication.explanation.ranking_features && <div className="ranking-signals compact"><div><span>Evidence</span><strong>{Math.round(selectedApplication.explanation.ranking_features.structured_evidence ?? 0)}</strong></div><div><span>Semantic</span><strong>{Math.round(selectedApplication.explanation.ranking_features.semantic_similarity ?? 0)}</strong></div><div><span>Reranker</span><strong>{Math.round(selectedApplication.explanation.ranking_features.cross_feature_reranker ?? 0)}</strong></div></div>}
+            <div className={`confidence-state ${selectedApplication.explanation.abstained ? "abstained" : ""}`}>{selectedApplication.explanation.abstention_reason ?? (selectedApplication.explanation.confidence_status ?? "uncalibrated").replaceAll("_", " ")}</div>
             <h4>Verify next</h4>
             {(selectedApplication.explanation.missing_requirements ?? []).map(item => <span className="chip warn" key={item}>{item}</span>)}
+            {(selectedApplication.explanation.evidence_citations?.length ?? 0) > 0 && <div className="citation-list"><h4>Evidence provenance</h4>{selectedApplication.explanation.evidence_citations?.slice(0, 4).map((citation, index) => <div key={`${citation.source_uri}-${index}`}><strong>{citation.requirement} {citation.verified && <span>verified</span>}</strong><p>{citation.excerpt}</p><small>{citation.source_uri}</small></div>)}</div>}
             <div className="agent-note"><Bot size={18} /><div><strong>Review assistant</strong><p>{selectedApplication.explanation.next_best_actions?.[0] ?? "Review the evidence map before changing stage."}</p></div></div>
             {(nextStages[selectedApplication.status]?.length ?? 0) > 0 && <form className="decision-form" onSubmit={moveApplication}>
               <label>Move to<select value={targetStage} onChange={event => setTargetStage(event.target.value)} required><option value="">Select next stage</option>{nextStages[selectedApplication.status].map(stage => <option key={stage} value={stage}>{stageLabel(stage)}</option>)}</select></label>

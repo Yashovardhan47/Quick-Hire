@@ -3,7 +3,7 @@ from app.services.talent_intelligence import analyze_job_description, analyze_re
 
 def test_resume_analysis_extracts_job_evidence_and_excludes_sensitive_fields() -> None:
     text = """
-    Data analyst with 3 years of experience using Python, pandas, PostgreSQL and Power BI.
+    Data analyst test@example.com +91 98765 43210 with 3 years of experience using Python, pandas, PostgreSQL and Power BI.
     Built a customer churn project and deployed a dashboard that reduced weekly reporting time by 30%.
     Worked with stakeholders to define metrics and present analytical insights.
     """ * 4
@@ -14,6 +14,8 @@ def test_resume_analysis_extracts_job_evidence_and_excludes_sensitive_fields() -
     assert result["experience_years"] == 3
     assert result["project_signals"]
     assert "age or date of birth" in result["excluded_fields"]
+    assert all("test@example.com" not in item["evidence_excerpt"] for item in result["skills"])
+    assert all("98765" not in item["evidence_excerpt"] for item in result["skills"])
 
 
 def test_job_analysis_builds_weighted_requirements_and_language_warnings() -> None:

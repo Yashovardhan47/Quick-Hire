@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import require_roles
-from app.api.routes.matching import compute_match
+from app.api.routes.matching import compute_match, refresh_candidate_matches
 from app.api.routes.realtime import manager
 from app.db.session import get_db
 from app.models.entities import AssessmentAttempt, AuditEvent, CandidateEvidence, Job, UserRole, utcnow
@@ -78,13 +78,18 @@ async def submit_assessment(
                 source_uri=f"assessment:{attempt.id}",
             )
         )
+    refreshed = await refresh_candidate_matches(identity["sub"], db)
     db.add(
         AuditEvent(
             actor_id=identity["sub"],
             action="assessment_completed",
             resource_type="assessment_attempt",
             resource_id=attempt.id,
-            details={"score": attempt.score, "model_version": attempt.model_version},
+            details={
+                "score": attempt.score,
+                "applications_refreshed": len(refreshed),
+                "model_version": attempt.model_version,
+            },
         )
     )
     await db.commit()

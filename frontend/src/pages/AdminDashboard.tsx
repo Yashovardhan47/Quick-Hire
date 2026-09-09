@@ -6,6 +6,7 @@ type Metrics = {
   users: number;
   candidates: number;
   recruiters: number;
+  candidate_documents: number;
   published_jobs: number;
   applications: number;
   completed_assessments: number;
@@ -34,7 +35,7 @@ export default function AdminDashboard() {
       <div className="metric-grid">
         <article><UsersRound /><strong>{metrics?.users ?? "—"}</strong><span>Total users</span></article>
         <article><Waypoints /><strong>{metrics?.applications ?? "—"}</strong><span>Applications</span></article>
-        <article><ClipboardCheck /><strong>{metrics?.completed_assessments ?? "—"}</strong><span>Completed checks</span></article>
+        <article><ClipboardCheck /><strong>{metrics?.candidate_documents ?? "—"}</strong><span>Resume documents</span></article>
         <article><Activity /><strong>{metrics?.live_connections ?? "—"}</strong><span>Live connections</span></article>
       </div>
       <div className="content-grid">

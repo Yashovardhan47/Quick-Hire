@@ -16,6 +16,7 @@ class EvidenceItem:
     strength: float
     confidence: float
     verified: bool = False
+    source_uri: str | None = None
 
 
 def normalize(value: str) -> str:
@@ -112,4 +113,3 @@ def calculate_match(
         next_best_actions=actions,
         model_version=MODEL_VERSION,
     )
-

@@ -1,14 +1,14 @@
 import re
 
 
-MODEL_VERSION = "talent-normalizer-0.2.0"
+MODEL_VERSION = "multilingual-talent-normalizer-0.3.0"
 
 SKILL_TAXONOMY: dict[str, tuple[str, ...]] = {
     "Python": ("python", "pandas", "numpy"),
     "SQL": ("sql", "postgresql", "mysql", "sqlite"),
-    "Data analysis": ("data analysis", "data analytics", "analytical insights"),
-    "Statistics": ("statistics", "statistical", "hypothesis testing"),
-    "Machine learning": ("machine learning", "scikit-learn", "sklearn"),
+    "Data analysis": ("data analysis", "data analytics", "analytical insights", "डेटा विश्लेषण", "डेटा एनालिटिक्स", "డేటా విశ్లేషణ"),
+    "Statistics": ("statistics", "statistical", "hypothesis testing", "सांख्यिकी", "గణాంకాలు"),
+    "Machine learning": ("machine learning", "scikit-learn", "sklearn", "मशीन लर्निंग", "యంత్ర అభ్యాసం"),
     "Deep learning": ("deep learning", "pytorch", "tensorflow", "keras"),
     "Natural language processing": ("natural language processing", "nlp", "transformers"),
     "Generative AI": ("generative ai", "large language model", "llm", "rag"),
@@ -32,7 +32,7 @@ SKILL_TAXONOMY: dict[str, tuple[str, ...]] = {
     "A/B testing": ("a/b testing", "ab testing", "experimentation"),
     "Data structures and algorithms": ("data structures", "algorithms", "dsa"),
     "REST APIs": ("rest api", "restful", "api development"),
-    "Communication": ("communication", "stakeholder management", "presentations"),
+    "Communication": ("communication", "stakeholder management", "presentations", "संचार", "संवाद", "కమ్యూనికేషన్"),
     "Product management": ("product management", "product roadmap", "product strategy"),
 }
 
@@ -48,7 +48,7 @@ EXCLUDED_FIELDS = [
 
 
 def _sentences(text: str) -> list[str]:
-    return [part.strip(" \t-•") for part in re.split(r"[\n\r]+|(?<=[.!?])\s+", text) if len(part.strip()) >= 12]
+    return [part.strip(" \t-•") for part in re.split(r"[\n\r]+|(?<=[.!?।])\s+", text) if len(part.strip()) >= 12]
 
 
 def _contains_alias(text: str, alias: str) -> bool:
@@ -56,14 +56,40 @@ def _contains_alias(text: str, alias: str) -> bool:
     return re.search(rf"(?<![a-z0-9]){escaped}(?![a-z0-9])", text.lower()) is not None
 
 
+def _redact_contact_details(text: str) -> str:
+    text = re.sub(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", "[email removed]", text, flags=re.I)
+    return re.sub(r"(?<!\d)(?:\+?\d[\s().-]*){10,14}(?!\d)", "[phone removed]", text)
+
+
 def _excerpt(text: str, aliases: tuple[str, ...]) -> str:
     for sentence in _sentences(text):
         if any(_contains_alias(sentence, alias) for alias in aliases):
-            return sentence[:240]
+            return _redact_contact_details(sentence)[:240]
     return "Skill listed in the supplied text."
 
 
-def extract_skills(text: str) -> list[dict]:
+def detect_language_codes(text: str) -> list[str]:
+    scripts = {
+        "hi": len(re.findall(r"[\u0900-\u097f]", text)),
+        "bn": len(re.findall(r"[\u0980-\u09ff]", text)),
+        "ta": len(re.findall(r"[\u0b80-\u0bff]", text)),
+        "te": len(re.findall(r"[\u0c00-\u0c7f]", text)),
+        "kn": len(re.findall(r"[\u0c80-\u0cff]", text)),
+    }
+    codes = [code for code, count in scripts.items() if count >= 4]
+    if len(re.findall(r"[A-Za-z]", text)) >= 10:
+        codes.insert(0, "en")
+    return codes or ["und"]
+
+
+def _source_locator(aliases: tuple[str, ...], segments: list[dict[str, str]] | None) -> str | None:
+    for segment in segments or []:
+        if any(_contains_alias(segment["text"], alias) for alias in aliases):
+            return segment["locator"]
+    return None
+
+
+def extract_skills(text: str, segments: list[dict[str, str]] | None = None) -> list[dict]:
     results = []
     for skill, aliases in SKILL_TAXONOMY.items():
         matches = [alias for alias in aliases if _contains_alias(text, alias)]
@@ -75,24 +101,28 @@ def extract_skills(text: str) -> list[dict]:
                 "skill": skill,
                 "confidence": round(confidence, 2),
                 "evidence_excerpt": _excerpt(text, aliases),
+                "source_locator": _source_locator(aliases, segments),
             }
         )
     return results
 
 
-def analyze_resume(text: str) -> dict:
-    skills = extract_skills(text)
-    year_values = [float(value) for value in re.findall(r"(?<!\d)(\d{1,2})(?:\+)?\s*(?:years?|yrs?)", text, re.I)]
+def analyze_resume(text: str, segments: list[dict[str, str]] | None = None) -> dict:
+    skills = extract_skills(text, segments)
+    year_values = [
+        float(value)
+        for value in re.findall(r"(?<!\d)(\d{1,2})(?:\+)?\s*(?:years?|yrs?|वर्ष|साल|సంవత్సరాలు?)", text, re.I)
+    ]
     experience_years = max(year_values) if year_values else None
     experience_signals = [
-        sentence[:240]
+        _redact_contact_details(sentence)[:240]
         for sentence in _sentences(text)
-        if re.search(r"\b(experience|worked|developed|built|led|managed|implemented|designed)\b", sentence, re.I)
+        if re.search(r"\b(experience|worked|developed|built|led|managed|implemented|designed)\b|अनुभव|काम किया|అనుభవం|అభివృద్ధి", sentence, re.I)
     ][:8]
     project_signals = [
-        sentence[:240]
+        _redact_contact_details(sentence)[:240]
         for sentence in _sentences(text)
-        if re.search(r"\b(project|portfolio|github|deployed|created|prototype)\b", sentence, re.I)
+        if re.search(r"\b(project|portfolio|github|deployed|created|prototype)\b|परियोजना|प्रोजेक्ट|ప్రాజెక్ట్", sentence, re.I)
     ][:6]
     warnings = []
     if len(text.split()) < 120:
@@ -111,6 +141,7 @@ def analyze_resume(text: str) -> dict:
         "summary": f"Detected {len(skills)} job-related skills{years_phrase}. All extracted claims remain unverified until supported by evidence.",
         "quality_warnings": warnings,
         "excluded_fields": EXCLUDED_FIELDS,
+        "language_codes": detect_language_codes(text),
         "model_version": MODEL_VERSION,
     }
 

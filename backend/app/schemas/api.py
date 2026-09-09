@@ -91,6 +91,13 @@ class RequirementMatch(BaseModel):
     mandatory: bool
 
 
+class EvidenceCitation(BaseModel):
+    requirement: str
+    source_uri: str
+    excerpt: str
+    verified: bool
+
+
 class MatchResult(BaseModel):
     score: float
     confidence: float
@@ -101,6 +108,12 @@ class MatchResult(BaseModel):
     missing_requirements: list[str]
     next_best_actions: list[str]
     model_version: str
+    ranking_features: dict[str, float] = Field(default_factory=dict)
+    retrieval_mode: str = "structured_evidence"
+    confidence_status: Literal["limited_evidence", "uncalibrated", "evidence_backed"] = "uncalibrated"
+    abstained: bool = False
+    abstention_reason: str | None = None
+    evidence_citations: list[EvidenceCitation] = Field(default_factory=list)
 
 
 class ApplicationCreate(BaseModel):
@@ -130,6 +143,7 @@ class SkillSignal(BaseModel):
     skill: str
     confidence: float = Field(ge=0, le=1)
     evidence_excerpt: str
+    source_locator: str | None = None
 
 
 class ResumeAnalysisResult(BaseModel):
@@ -140,7 +154,23 @@ class ResumeAnalysisResult(BaseModel):
     summary: str
     quality_warnings: list[str]
     excluded_fields: list[str]
+    language_codes: list[str] = Field(default_factory=list)
     model_version: str
+
+
+class ResumeDocumentResult(BaseModel):
+    document_id: str | None
+    filename: str
+    media_type: str
+    sha256: str
+    size_bytes: int
+    page_count: int
+    text_length: int
+    language_codes: list[str]
+    security_flags: list[str]
+    duplicate: bool = False
+    retention_notice: str
+    analysis: ResumeAnalysisResult
 
 
 class JobAnalysisRequest(BaseModel):
@@ -243,6 +273,7 @@ class PlatformMetrics(BaseModel):
     users: int
     candidates: int
     recruiters: int
+    candidate_documents: int
     published_jobs: int
     applications: int
     completed_assessments: int

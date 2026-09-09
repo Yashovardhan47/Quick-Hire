@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import require_roles
+from app.api.routes.matching import refresh_candidate_matches
 from app.db.session import get_db
 from app.models.entities import CandidateEvidence, CandidateProfile, UserRole
 from app.schemas.api import CandidateProfileInput, EvidenceCreate, EvidenceRead
@@ -58,6 +59,7 @@ async def add_evidence(
         raise HTTPException(status_code=400, detail="Candidates cannot self-verify evidence")
     evidence = CandidateEvidence(candidate_id=identity["sub"], **payload.model_dump())
     db.add(evidence)
+    await refresh_candidate_matches(identity["sub"], db)
     await db.commit()
     await db.refresh(evidence)
     return evidence

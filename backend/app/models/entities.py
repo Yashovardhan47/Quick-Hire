@@ -76,6 +76,26 @@ class CandidateEvidence(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class CandidateDocument(Base):
+    __tablename__ = "candidate_documents"
+    __table_args__ = (UniqueConstraint("candidate_id", "sha256", name="uq_candidate_document_sha"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    candidate_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    original_filename: Mapped[str] = mapped_column(String(255))
+    media_type: Mapped[str] = mapped_column(String(120))
+    sha256: Mapped[str] = mapped_column(String(64), index=True)
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    text_length: Mapped[int] = mapped_column(Integer)
+    page_count: Mapped[int] = mapped_column(Integer, default=1)
+    language_codes: Mapped[list] = mapped_column(JSON, default=list)
+    security_flags: Mapped[list] = mapped_column(JSON, default=list)
+    analysis: Mapped[dict] = mapped_column(JSON, default=dict)
+    extraction_status: Mapped[str] = mapped_column(String(40), default="completed", index=True)
+    model_version: Mapped[str] = mapped_column(String(80))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class Job(Base):
     __tablename__ = "jobs"
 
