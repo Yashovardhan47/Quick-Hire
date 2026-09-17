@@ -1,7 +1,8 @@
+import json
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.models.entities import ApplicationStatus, UserRole
 
@@ -25,7 +26,7 @@ class UserRead(BaseModel):
 
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(min_length=1, max_length=128)
 
 
 class TokenResponse(BaseModel):
@@ -52,6 +53,18 @@ class AuthMethodsRead(BaseModel):
     email_verified: bool
 
 
+class EmailActionRequest(BaseModel):
+    email: EmailStr
+
+
+class TokenConfirmRequest(BaseModel):
+    token: str = Field(min_length=32, max_length=500)
+
+
+class PasswordResetConfirm(TokenConfirmRequest):
+    new_password: str = Field(min_length=10, max_length=128)
+
+
 class RequirementInput(BaseModel):
     name: str = Field(min_length=1, max_length=160)
     weight: float = Field(default=1, gt=0, le=10)
@@ -61,10 +74,10 @@ class RequirementInput(BaseModel):
 class JobCreate(BaseModel):
     title: str = Field(min_length=2, max_length=200)
     company: str = Field(min_length=2, max_length=200)
-    description: str = Field(min_length=20)
-    location: str = ""
-    employment_type: str = "full-time"
-    requirements: list[RequirementInput] = Field(min_length=1)
+    description: str = Field(min_length=20, max_length=100_000)
+    location: str = Field(default="", max_length=160)
+    employment_type: str = Field(default="full-time", max_length=60)
+    requirements: list[RequirementInput] = Field(min_length=1, max_length=100)
     status: Literal["draft", "published"] = "draft"
 
 
@@ -75,25 +88,64 @@ class JobRead(JobCreate):
     created_at: datetime
 
 
+class JobStatusUpdate(BaseModel):
+    status: Literal["draft", "published", "closed"]
+
+
 class CandidateProfileInput(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    headline: str = ""
-    bio: str = ""
-    location: str = ""
+    headline: str = Field(default="", max_length=200)
+    bio: str = Field(default="", max_length=20_000)
+    location: str = Field(default="", max_length=160)
     experience_years: float = Field(default=0, ge=0, le=80)
-    skills: list[str] = Field(default_factory=list)
+    skills: list[str] = Field(default_factory=list, max_length=100)
     preferences: dict = Field(default_factory=dict)
+
+    @field_validator("skills")
+    @classmethod
+    def normalize_skills(cls, values: list[str]) -> list[str]:
+        normalized: list[str] = []
+        seen: set[str] = set()
+        for value in values:
+            skill = value.strip()
+            if not skill:
+                continue
+            if len(skill) > 160:
+                raise ValueError("Each skill must contain at most 160 characters")
+            key = skill.casefold()
+            if key not in seen:
+                normalized.append(skill)
+                seen.add(key)
+        return normalized
+
+    @field_validator("preferences")
+    @classmethod
+    def bound_preferences(cls, value: dict) -> dict:
+        if len(json.dumps(value, ensure_ascii=False, default=str)) > 20_000:
+            raise ValueError("Preferences payload is too large")
+        return value
+
+
+class CandidateConsentUpdate(BaseModel):
+    granted: bool
+
+
+class CandidateConsentRead(BaseModel):
+    purpose: Literal["external_model_processing"] = "external_model_processing"
+    granted: bool
+    policy_version: str
+    updated_at: datetime | None = None
 
 
 class EvidenceCreate(BaseModel):
     skill: str = Field(min_length=1, max_length=160)
     source_type: Literal["resume", "project", "assessment", "interview", "portfolio", "manual"]
-    description: str = Field(min_length=3)
+    description: str = Field(min_length=3, max_length=20_000)
     strength: float = Field(ge=0, le=1)
     confidence: float = Field(ge=0, le=1)
     verified: bool = False
-    source_uri: str | None = None
+    source_uri: str | None = Field(default=None, max_length=500)
 
 
 class EvidenceRead(EvidenceCreate):
@@ -152,6 +204,12 @@ class ApplicationRead(BaseModel):
     human_decision_reason: str | None
     created_at: datetime
     updated_at: datetime
+
+
+class CandidateApplicationRead(ApplicationRead):
+    job_title: str
+    company: str
+    location: str
 
 
 class ResumeAnalysisRequest(BaseModel):
@@ -286,9 +344,145 @@ class ApplicationStatusUpdate(BaseModel):
     evidence_reviewed: Literal[True]
 
 
+class ApplicationWithdraw(BaseModel):
+    reason: str = Field(default="Candidate withdrew the application.", min_length=3, max_length=2_000)
+
+
 class RecruiterApplicationRead(ApplicationRead):
     job_title: str
     candidate_label: str
+
+
+class RecruiterAssistantRequest(BaseModel):
+    action: Literal["queue_summary", "evidence_gaps", "interview_plan", "candidate_update"]
+    application_id: str | None = None
+
+
+class RecruiterAssistantResponse(BaseModel):
+    action: str
+    title: str
+    summary: str
+    items: list[str]
+    warnings: list[str]
+    decision_notice: Literal["advisory_only_human_decision_required"] = "advisory_only_human_decision_required"
+
+
+class MessageCreate(BaseModel):
+    body: str = Field(min_length=1, max_length=5_000)
+
+
+class MessageRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    conversation_id: str
+    sender_id: str
+    sender_name: str
+    sender_role: UserRole
+    body: str
+    created_at: datetime
+    read_at: datetime | None
+
+
+class ConversationRead(BaseModel):
+    id: str
+    application_id: str
+    job_id: str
+    job_title: str
+    counterpart_name: str
+    last_message: str | None = None
+    last_message_at: datetime | None = None
+    unread_count: int = 0
+
+
+class InterviewScheduleCreate(BaseModel):
+    application_id: str
+    starts_at: datetime
+    duration_minutes: int = Field(default=45, ge=15, le=240)
+    timezone: str = Field(default="UTC", min_length=1, max_length=80)
+    meeting_url: str | None = Field(default=None, max_length=500)
+
+
+class InterviewScheduleUpdate(BaseModel):
+    action: Literal["confirm", "decline", "cancel"]
+    candidate_note: str = Field(default="", max_length=2_000)
+
+
+class InterviewScheduleRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    application_id: str
+    job_id: str
+    job_title: str
+    candidate_id: str
+    candidate_name: str
+    recruiter_id: str
+    starts_at: datetime
+    duration_minutes: int
+    timezone: str
+    meeting_url: str | None
+    status: str
+    candidate_note: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class NotificationRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    event_type: str
+    title: str
+    body: str
+    data: dict
+    read_at: datetime | None
+    created_at: datetime
+
+
+class NotificationPreferenceUpdate(BaseModel):
+    browser_enabled: bool
+    email_transactional_enabled: bool
+    email_digest_enabled: bool
+
+
+class NotificationPreferenceRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    in_app_enabled: bool
+    browser_enabled: bool
+    email_transactional_enabled: bool
+    email_digest_enabled: bool
+
+
+class ModelEvaluationRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    model_version: str
+    dataset_version: str
+    metrics: dict
+    status: str
+    approved_at: datetime | None
+    created_at: datetime
+
+
+class CandidateRequestCreate(BaseModel):
+    request_type: Literal["correction", "appeal", "accommodation", "data_export", "deletion"]
+    details: str = Field(min_length=10, max_length=5_000)
+
+
+class CandidateRequestResolve(BaseModel):
+    status: Literal["in_review", "resolved", "denied"]
+    resolution: str = Field(default="", max_length=5_000)
+
+
+class CandidateRequestRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    candidate_id: str
+    request_type: str
+    details: str
+    status: str
+    resolution: str
+    resolved_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
 
 
 class PlatformMetrics(BaseModel):
@@ -302,6 +496,11 @@ class PlatformMetrics(BaseModel):
     completed_mock_interviews: int
     audit_events: int
     live_connections: int
+    messages: int
+    scheduled_interviews: int
+    pending_email_deliveries: int
+    failed_email_deliveries: int
+    open_candidate_requests: int
     model_version: str
     evaluation_state: Literal["dataset_required", "evaluating", "approved"]
 

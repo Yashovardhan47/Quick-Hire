@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import require_roles
+from app.api.dependencies import require_verified_roles
 from app.api.routes.matching import compute_match, refresh_candidate_matches
 from app.api.routes.realtime import manager
 from app.db.session import get_db
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/assessments", tags=["adaptive assessments"])
 @router.post("/adaptive/{job_id}", response_model=AssessmentAttemptRead, status_code=201)
 async def create_adaptive_assessment(
     job_id: str,
-    identity: dict = Depends(require_roles(UserRole.candidate)),
+    identity: dict = Depends(require_verified_roles(UserRole.candidate)),
     db: AsyncSession = Depends(get_db),
 ) -> AssessmentAttemptRead:
     job = await db.get(Job, job_id)
@@ -49,7 +49,7 @@ async def create_adaptive_assessment(
 async def submit_assessment(
     attempt_id: str,
     payload: AssessmentSubmit,
-    identity: dict = Depends(require_roles(UserRole.candidate)),
+    identity: dict = Depends(require_verified_roles(UserRole.candidate)),
     db: AsyncSession = Depends(get_db),
 ) -> AssessmentResult:
     attempt = await db.get(AssessmentAttempt, attempt_id)

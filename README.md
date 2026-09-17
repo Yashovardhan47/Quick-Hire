@@ -2,19 +2,33 @@
 
 QuickHire EvidenceGraph is the AI-first evolution of Quick-Hire. It connects job requirements to verifiable candidate evidence from profiles, projects, assessments and structured interviews. AI produces transparent recommendations with confidence and missing-evidence explanations; a human recruiter remains responsible for employment decisions.
 
-## Authentication and enforceable-governance release · 0.4
+## Production-workflow release · 0.5
 
 - Short-lived, issuer/audience/type-bound access JWTs
 - Rotating opaque refresh sessions in strict, HTTP-only cookies
 - Refresh-token hashes only in the database, with account-wide replay revocation
 - Password registration and sign-in for candidates, recruiters and controlled admins
+- Single-use email verification and password recovery with session revocation
 - Backend-verified Google Identity Services sign-in for candidates and recruiters
 - Google identities bound to the stable `sub` claim; no silent email-based account linking
 - Authenticated in-account Google linking requiring an exact email match
 - Server-side prohibited-signal blocking at jobs, ranking profiles and evidence entry
 - Defense-in-depth removal of sensitive legacy signals before local or external ranking
+- Revocable, versioned candidate consent required before any external embedding or reranking
 - Explicit human evidence review, confirmation and reasoning for every recruiter stage change
 - Admin-visible, versioned employment-AI policy
+- Public animated product interface with the narrated 24-second overview
+- Live published-job marketplace (no hard-coded production jobs)
+- Animated candidate, recruiter and admin analytics derived only from current database records
+- Persistent candidate/recruiter messages with authorization boundaries
+- Human-confirmed interview scheduling and secure meeting links
+- Durable in-app notifications, Redis WebSocket fan-out and a retrying email outbox worker
+- Candidate application tracker and candidate-controlled withdrawal
+- Advisory-only recruiter assistant for queue, evidence and interview preparation
+- Candidate correction, appeal, accommodation, export and deletion request workflow
+- Checksummed foundation migrations for an empty production PostgreSQL database
+- Production containers, automatic TLS proxy, health/readiness probes and structured request logs
+- Representative-data calibration tooling with explicit uncalibrated behavior by default
 
 The EvidenceGraph 0.3 model capabilities remain available:
 
@@ -23,6 +37,7 @@ The EvidenceGraph 0.3 model capabilities remain available:
 - Explainable, uncertainty-aware EvidenceGraph matching engine
 - Resume intelligence that extracts job-related claims while excluding sensitive fields
 - PDF, DOCX and TXT ingestion with signature, archive, size and active-content checks
+- Fail-closed ClamAV screening and accessible-text enforcement in production
 - English, Hindi and Telugu skill aliases with Indian-script language detection
 - Job-description intelligence that creates weighted competencies and flags exclusionary wording
 - Hybrid recommendations combining structured evidence, vector similarity and reranking
@@ -57,9 +72,9 @@ Candidates and recruiters can register in the interface. To create the first pla
 docker compose exec backend python -m app.cli.create_admin
 ```
 
-For an existing database, apply `database/migrations/0002_ai_workflows.sql`, `database/migrations/0003_document_intelligence.sql` and `database/migrations/0004_auth_governance.sql` in order. New development databases are created from the current SQLAlchemy models.
+Production databases are created and upgraded by `python -m app.cli.migrate`; do not edit an applied migration. Development can still create the current SQLAlchemy schema automatically.
 
-By default, hybrid retrieval runs locally and candidate text is not sent to an external model. External embedding and reranking require `EXTERNAL_MODEL_DATA_PROCESSING_ENABLED=true`, explicit provider URLs and an API key. Enable that only after candidate notice, consent and vendor data-processing review.
+By default, hybrid retrieval runs locally and candidate text is not sent to an external model. External embedding and reranking require `EXTERNAL_MODEL_DATA_PROCESSING_ENABLED=true`, explicit provider URLs, an API key, and a current opt-in from the individual candidate. Enable the provider only after vendor data-processing review; the server enforces consent and returns to local matching when it is revoked.
 
 ## Validate
 
@@ -75,10 +90,21 @@ cd backend
 python -m app.cli.evaluate_ranker evaluation.jsonl --k 10
 ```
 
+Fit a versioned confidence artifact only from representative, human-reviewed labels:
+
+```bash
+cd backend
+python -m app.cli.fit_calibrator labels.jsonl confidence-calibration.json --dataset-version reviewed-v1
+```
+
+## Deploy
+
+The production Compose stack includes PostgreSQL, authenticated Redis, a checksummed migration job, two API workers, the notification-delivery worker, the React frontend and automatic HTTPS through Caddy. Follow [docs/PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md); production intentionally fails fast when required Google, domain, email or secret settings are missing.
+
 ## Decision boundary
 
 QuickHire may retrieve, structure and summarize job-related evidence. It does not autonomously reject, shortlist or hire. Interview feedback is limited to typed answer content and never evaluates appearance, voice, accent, emotion, personality, disability, honesty or other protected and sensitive traits. These rules are enforced in API validation, ranking-input sanitation, assessment/interview generation, recruiter confirmations, tests and the admin policy endpoint.
 
 The previous PHP prototype remains in the branch history for reference. Do not reuse credentials that were ever committed to the public repository.
 
-See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md), [docs/AI_GOVERNANCE_POLICY.md](docs/AI_GOVERNANCE_POLICY.md), [docs/AI_PLATFORM_BLUEPRINT.md](docs/AI_PLATFORM_BLUEPRINT.md) and [docs/MODEL_CARD.md](docs/MODEL_CARD.md) for the security, governance and research boundaries.
+See [docs/PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md), [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md), [docs/AI_GOVERNANCE_POLICY.md](docs/AI_GOVERNANCE_POLICY.md), [docs/AI_PLATFORM_BLUEPRINT.md](docs/AI_PLATFORM_BLUEPRINT.md) and [docs/MODEL_CARD.md](docs/MODEL_CARD.md) for deployment, security, governance and research boundaries.

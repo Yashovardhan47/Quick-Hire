@@ -1,4 +1,4 @@
-# QuickHire EvidenceGraph 0.3 Model Card · Platform controls 0.4
+# QuickHire EvidenceGraph 0.3 Model Card · Platform controls 0.5
 
 ## Intended use
 
@@ -29,14 +29,14 @@ Before production, evaluate on representative, time-separated job and candidate 
 ## Known limitations
 
 - Skill aliases currently emphasize English with initial Hindi and Telugu coverage.
-- Scanned PDFs require a future isolated OCR worker.
+- Production rejects scan-only PDFs that cannot yield reliable text; OCR remains an optional future accessibility enhancement.
 - Extracted resume claims remain unverified until supported by an assessment, project or human review.
 - Baseline confidence is intentionally labeled uncalibrated until sufficient outcome data exists.
 - Historical hiring outcomes can encode discrimination and must not be treated as ground truth without governance review.
-- File validation reduces risk but does not replace malware scanning and sandboxed document processing in production.
+- Production uploads are fail-closed through ClamAV before strict file parsing; independent parser/sandbox review is still required for high-risk deployments.
 
 ## Required controls
 
-Candidate notice, consent for external processing, correction and appeal paths, accommodations, data retention and deletion, access logging, independent security review, model/version rollback and periodic drift/fairness audits are required before consequential use.
+Candidate notice, consent for external processing, correction and appeal paths, accommodations, data retention and deletion, access logging, independent security review, model/version rollback and periodic drift/fairness audits are required for consequential use.
 
-Platform release 0.4 implements input blocking, ranking sanitation, typed-content-only interview generation, human stage confirmations and an administrator-readable policy manifest. Candidate appeal, accommodation and deletion workflows, representative validation and independent audits remain pre-production requirements.
+Platform release 0.5 implements input blocking, ranking sanitation, typed-content-only interview generation, human stage confirmations, durable audit/notification workflows, candidate correction/appeal/accommodation/export/deletion requests, and an administrator-readable policy manifest. Representative validation, jurisdiction-specific legal review, penetration testing, and independent audits cannot be manufactured in source code and remain launch requirements.

@@ -70,6 +70,18 @@ class RefreshSession(Base):
     )
 
 
+class AuthActionToken(Base):
+    __tablename__ = "auth_action_tokens"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    purpose: Mapped[str] = mapped_column(String(40), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class CandidateProfile(Base):
     __tablename__ = "candidate_profiles"
 
@@ -81,6 +93,18 @@ class CandidateProfile(Base):
     skills: Mapped[list] = mapped_column(JSON, default=list)
     preferences: Mapped[dict] = mapped_column(JSON, default=dict)
     resume_object_key: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class CandidateConsent(Base):
+    __tablename__ = "candidate_consents"
+    __table_args__ = (UniqueConstraint("candidate_id", "purpose", name="uq_candidate_consent_purpose"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    candidate_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    purpose: Mapped[str] = mapped_column(String(80), index=True)
+    granted: Mapped[bool] = mapped_column(Boolean, default=False)
+    policy_version: Mapped[str] = mapped_column(String(120))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 
@@ -221,3 +245,109 @@ class AuditEvent(Base):
     resource_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
     details: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Conversation(Base):
+    __tablename__ = "conversations"
+    __table_args__ = (UniqueConstraint("application_id", name="uq_conversation_application"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    application_id: Mapped[str] = mapped_column(ForeignKey("applications.id", ondelete="CASCADE"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, index=True)
+
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    conversation_id: Mapped[str] = mapped_column(ForeignKey("conversations.id", ondelete="CASCADE"), index=True)
+    sender_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class InterviewSchedule(Base):
+    __tablename__ = "interview_schedules"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    application_id: Mapped[str] = mapped_column(ForeignKey("applications.id", ondelete="CASCADE"), index=True)
+    organizer_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    duration_minutes: Mapped[int] = mapped_column(Integer, default=45)
+    timezone: Mapped[str] = mapped_column(String(80), default="UTC")
+    meeting_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    status: Mapped[str] = mapped_column(String(40), default="proposed", index=True)
+    candidate_note: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class NotificationPreference(Base):
+    __tablename__ = "notification_preferences"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    in_app_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    browser_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    email_transactional_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    email_digest_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    event_type: Mapped[str] = mapped_column(String(120), index=True)
+    title: Mapped[str] = mapped_column(String(200))
+    body: Mapped[str] = mapped_column(Text)
+    data: Mapped[dict] = mapped_column(JSON, default=dict)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
+class NotificationDelivery(Base):
+    __tablename__ = "notification_deliveries"
+    __table_args__ = (UniqueConstraint("notification_id", "channel", name="uq_notification_delivery_channel"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    notification_id: Mapped[str] = mapped_column(ForeignKey("notifications.id", ondelete="CASCADE"), index=True)
+    channel: Mapped[str] = mapped_column(String(40), default="email")
+    status: Mapped[str] = mapped_column(String(40), default="pending", index=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ModelEvaluationRun(Base):
+    __tablename__ = "model_evaluation_runs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    model_version: Mapped[str] = mapped_column(String(120), index=True)
+    dataset_version: Mapped[str] = mapped_column(String(120))
+    metrics: Mapped[dict] = mapped_column(JSON, default=dict)
+    status: Mapped[str] = mapped_column(String(40), default="evaluated", index=True)
+    approved_by: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class CandidateRequest(Base):
+    """Restricted candidate recourse/privacy request; never exposed to ranking code."""
+
+    __tablename__ = "candidate_requests"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    candidate_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    request_type: Mapped[str] = mapped_column(String(60), index=True)
+    details: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(40), default="submitted", index=True)
+    resolution: Mapped[str] = mapped_column(Text, default="")
+    resolved_by: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

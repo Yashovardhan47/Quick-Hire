@@ -8,6 +8,7 @@ import httpx
 
 from app.schemas.api import EvidenceCitation, MatchResult
 from app.services.ai_policy import safe_evidence_items, safe_feature_names, safe_requirements, scrub_prohibited_text
+from app.services.confidence_calibration import calibrate_probability, load_calibration_artifact
 from app.services.evidence_graph import EvidenceItem, calculate_match, skill_similarity
 from app.services.model_providers import cross_encoder_score, embedding_similarity
 from app.services.talent_intelligence import SKILL_TAXONOMY
@@ -89,6 +90,7 @@ def calculate_hybrid_match(
     semantic_override: float | None = None,
     reranker_override: float | None = None,
     retrieval_mode: str = "local_multilingual_feature_hash",
+    calibration_artifact: dict | None = None,
 ) -> MatchResult:
     job_description = scrub_prohibited_text(job_description)[0]
     requirements = safe_requirements(requirements)
@@ -113,16 +115,16 @@ def calculate_hybrid_match(
     reranker = reranker_override if reranker_override is not None else local_reranker
     hybrid_score = 100.0 * (0.75 * structured + 0.15 * semantic + 0.1 * reranker)
 
-    required_verified = min(2, max(1, len(requirements)))
-    if verified_count >= required_verified and baseline.confidence >= 0.65:
-        confidence_status = "evidence_backed"
-    elif len(evidence) < 2 or baseline.confidence < 0.45:
+    if len(evidence) < 2 or baseline.confidence < 0.45:
         confidence_status = "limited_evidence"
+    elif calibration_artifact:
+        confidence_status = "evidence_backed"
     else:
         confidence_status = "uncalibrated"
     abstained = not evidence or baseline.confidence < 0.3
     abstention_reason = "Insufficient job-related evidence for a reliable recommendation." if abstained else None
-    confidence = min(0.95, baseline.confidence * (0.9 + 0.1 * verification_density))
+    raw_confidence = min(0.95, baseline.confidence * (0.9 + 0.1 * verification_density))
+    confidence = calibrate_probability(raw_confidence, calibration_artifact) if calibration_artifact else raw_confidence
     uncertainty = max(6.0, 28.0 * (1.0 - confidence) + (5.0 if confidence_status == "uncalibrated" else 0.0))
 
     return baseline.model_copy(
@@ -137,6 +139,7 @@ def calculate_hybrid_match(
                 "structured_evidence": round(baseline.score, 1),
                 "semantic_similarity": round(semantic * 100.0, 1),
                 "cross_feature_reranker": round(reranker * 100.0, 1),
+                "calibration_applied": 1.0 if calibration_artifact else 0.0,
             },
             "retrieval_mode": retrieval_mode,
             "confidence_status": confidence_status,
@@ -153,18 +156,32 @@ async def calculate_configured_hybrid_match(
     profile_skills: Iterable[str],
     evidence_items: Iterable[EvidenceItem],
     settings,
+    external_processing_allowed: bool = False,
 ) -> MatchResult:
     job_description = scrub_prohibited_text(job_description)[0]
     requirements = safe_requirements(requirements)
     skills = safe_feature_names(profile_skills)
     evidence = safe_evidence_items(evidence_items)
-    if not (
+    calibration_artifact = load_calibration_artifact(settings.calibration_model_path)
+    external_configured = (
         settings.external_model_data_processing_enabled
         and settings.ai_api_key
         and settings.embedding_api_url
         and settings.reranker_api_url
-    ):
-        return calculate_hybrid_match(job_description, requirements, skills, evidence)
+    )
+    if not external_configured or not external_processing_allowed:
+        return calculate_hybrid_match(
+            job_description,
+            requirements,
+            skills,
+            evidence,
+            retrieval_mode=(
+                "local_no_external_consent"
+                if settings.external_model_data_processing_enabled and not external_processing_allowed
+                else "local_multilingual_feature_hash"
+            ),
+            calibration_artifact=calibration_artifact,
+        )
 
     job_text = _job_text(job_description, requirements)
     candidate_text = _candidate_text(skills, evidence)
@@ -192,6 +209,7 @@ async def calculate_configured_hybrid_match(
             skills,
             evidence,
             retrieval_mode="local_fallback_after_provider_error",
+            calibration_artifact=calibration_artifact,
         )
     return calculate_hybrid_match(
         job_description,
@@ -201,4 +219,5 @@ async def calculate_configured_hybrid_match(
         semantic_override=semantic,
         reranker_override=reranker,
         retrieval_mode="configured_multilingual_embedding_and_cross_encoder",
+        calibration_artifact=calibration_artifact,
     )

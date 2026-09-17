@@ -18,7 +18,15 @@ export type Session = {
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1";
 const SESSION_KEY = "quickhire.session";
-const NO_REFRESH_PATHS = new Set(["/auth/login", "/auth/register", "/auth/google", "/auth/refresh"]);
+const NO_REFRESH_PATHS = new Set([
+  "/auth/login",
+  "/auth/register",
+  "/auth/google",
+  "/auth/refresh",
+  "/auth/email-verification/confirm",
+  "/auth/password/forgot",
+  "/auth/password/reset",
+]);
 let refreshInFlight: Promise<Session | null> | null = null;
 
 export function eventSocketUrl(): string {

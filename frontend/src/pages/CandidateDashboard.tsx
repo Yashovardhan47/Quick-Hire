@@ -1,11 +1,13 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, FileCheck2, FileText, MessagesSquare, ScanSearch, Target, UploadCloud } from "lucide-react";
 import { Link } from "react-router-dom";
 import FitCard from "../components/FitCard";
+import LiveBarChart from "../components/LiveBarChart";
 import { api } from "../lib/api";
 
 type Evidence = { id: string; skill: string; verified: boolean };
-type Application = { id: string; job_id: string; status: string };
+type Profile = { headline: string; bio: string; location: string; experience_years: number; skills: string[]; preferences: Record<string, unknown> };
+type Application = { id: string; job_id: string; job_title: string; company: string; location: string; status: string; human_decision_reason: string | null; updated_at: string };
 type MatchRequirement = { requirement: string; coverage: number; confidence: number };
 type Recommendation = {
   job_id: string;
@@ -48,6 +50,8 @@ type DocumentResult = {
 
 export default function CandidateDashboard() {
   const [evidence, setEvidence] = useState<Evidence[]>([]);
+  const [profile, setProfile] = useState<Profile>({ headline: "", bio: "", location: "", experience_years: 0, skills: [], preferences: {} });
+  const [skillText, setSkillText] = useState("");
   const [applications, setApplications] = useState<Application[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [resumeText, setResumeText] = useState("");
@@ -58,11 +62,13 @@ export default function CandidateDashboard() {
   const [working, setWorking] = useState(false);
 
   const loadWorkspace = useCallback(async () => {
-    const [evidenceResult, applicationResult, recommendationResult] = await Promise.allSettled([
+    const [profileResult, evidenceResult, applicationResult, recommendationResult] = await Promise.allSettled([
+      api<Profile>("/candidates/me/profile"),
       api<Evidence[]>("/candidates/me/evidence"),
       api<Application[]>("/applications/me"),
       api<Recommendation[]>("/recommendations/me/jobs"),
     ]);
+    if (profileResult.status === "fulfilled") { setProfile(profileResult.value); setSkillText(profileResult.value.skills.join(", ")); }
     if (evidenceResult.status === "fulfilled") setEvidence(evidenceResult.value);
     if (applicationResult.status === "fulfilled") setApplications(applicationResult.value);
     if (recommendationResult.status === "fulfilled") setRecommendations(recommendationResult.value);
@@ -121,8 +127,38 @@ export default function CandidateDashboard() {
     }
   }
 
+  async function withdraw(applicationId: string) {
+    const reason = window.prompt("Optional withdrawal reason", "Candidate withdrew the application.");
+    if (reason === null) return;
+    try {
+      await api(`/applications/${applicationId}/withdraw`, { method: "POST", body: JSON.stringify({ reason }) });
+      setMessage("Application withdrawn and the recruiter was notified.");
+      await loadWorkspace();
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to withdraw application"); }
+  }
+
+  async function saveProfile(event: FormEvent) {
+    event.preventDefault(); setWorking(true); setMessage("");
+    try {
+      const next = { ...profile, skills: skillText.split(",").map(item => item.trim()).filter(Boolean) };
+      setProfile(await api<Profile>("/candidates/me/profile", { method: "PUT", body: JSON.stringify(next) }));
+      setMessage("Profile saved. Job suggestions now use the updated job-related fields.");
+      await loadWorkspace();
+    } catch (reason) { setMessage(reason instanceof Error ? reason.message : "Unable to save profile"); }
+    finally { setWorking(false); }
+  }
+
   const top = recommendations[0];
   const verifiedCount = evidence.filter(item => item.verified).length;
+  const recommendationChart = useMemo(() => recommendations.slice(0, 5).map(item => ({
+    label: item.title,
+    value: item.match.score,
+    displayValue: `${Math.round(item.match.score)}%`,
+  })), [recommendations]);
+  const applicationChart = useMemo(() => Object.entries(applications.reduce<Record<string, number>>((counts, item) => {
+    counts[item.status] = (counts[item.status] ?? 0) + 1;
+    return counts;
+  }, {})).map(([label, value]) => ({ label: label.replaceAll("_", " "), value })), [applications]);
 
   return (
     <section className="workspace">
@@ -137,6 +173,18 @@ export default function CandidateDashboard() {
         <article><MessagesSquare /><strong>{applications.length}</strong><span>Active applications</span></article>
         <article><ScanSearch /><strong>{recommendations.length}</strong><span>Evidence-ranked jobs</span></article>
       </div>
+
+      <div className="content-grid analytics-grid">
+        <LiveBarChart title="Recommended-role evidence fit" description="Recalculates whenever your profile, resume evidence, assessments, or published jobs change." data={recommendationChart} />
+        <LiveBarChart title="Application stages" description="Built only from your current applications; no sample pipeline data is inserted." data={applicationChart} />
+      </div>
+
+      <article className="panel application-panel">
+        <div className="subheading"><div><span className="eyebrow">APPLICATION TRACKER</span><h3>Your live hiring pipeline</h3></div><div className="button-row"><Link className="text-link" to="/candidate/messages">Messages</Link><Link className="text-link" to="/candidate/interviews">Interviews</Link></div></div>
+        {applications.length > 0 ? <div className="responsive-table"><table><thead><tr><th>Role</th><th>Company</th><th>Status</th><th>Last update</th><th>Action</th></tr></thead><tbody>{applications.map(item => <tr key={item.id}><td><strong>{item.job_title}</strong><small>{item.location || "Location flexible"}</small></td><td>{item.company}</td><td><span className="status">{item.status.replaceAll("_", " ")}</span></td><td>{new Date(item.updated_at).toLocaleDateString()}</td><td>{!["withdrawn", "hired", "rejected"].includes(item.status) ? <button className="text-button danger-text" onClick={() => void withdraw(item.id)}>Withdraw</button> : "—"}</td></tr>)}</tbody></table></div> : <div className="empty-state compact"><MessagesSquare /><p>Your submitted applications will appear here with real-time status updates.</p></div>}
+      </article>
+
+      <article className="panel profile-panel"><div className="subheading"><div><span className="eyebrow">JOB PROFILE</span><h3>Describe the work you want to be matched with</h3></div><span className="safe-badge">Job-related fields only</span></div><form onSubmit={saveProfile}><div className="two-fields"><label>Professional headline<input value={profile.headline} onChange={event => setProfile(current => ({ ...current, headline: event.target.value }))} placeholder="Backend engineer building reliable APIs" /></label><label>Location preference<input value={profile.location} onChange={event => setProfile(current => ({ ...current, location: event.target.value }))} placeholder="Bengaluru, remote, or flexible" /></label></div><label>Skills, separated by commas<input value={skillText} onChange={event => setSkillText(event.target.value)} placeholder="Python, FastAPI, PostgreSQL" /></label><div className="two-fields"><label>Years of relevant experience<input type="number" min={0} max={80} step={0.5} value={profile.experience_years} onChange={event => setProfile(current => ({ ...current, experience_years: Number(event.target.value) }))} /></label><label>Work summary<textarea value={profile.bio} onChange={event => setProfile(current => ({ ...current, bio: event.target.value }))} placeholder="Describe projects, outcomes, and responsibilities…" /></label></div><button className="primary" disabled={working}>Save job profile</button></form></article>
 
       <div className="stack-grid">
         <div className="recommendation-list">

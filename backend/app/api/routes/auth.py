@@ -8,23 +8,30 @@ from app.api.dependencies import get_identity
 from app.core.config import get_settings
 from app.core.security import (
     create_access_token,
+    generate_action_token,
     generate_refresh_token,
+    hash_action_token,
     hash_password,
     hash_refresh_token,
     verify_password,
 )
 from app.db.session import get_db
-from app.models.entities import AuditEvent, CandidateProfile, RefreshSession, User, UserRole, utcnow
+from app.models.entities import AuthActionToken, AuditEvent, CandidateProfile, RefreshSession, User, UserRole, utcnow
 from app.schemas.api import (
     AuthMethodsRead,
+    EmailActionRequest,
     GoogleAuthRequest,
     GoogleLinkRequest,
     LoginRequest,
+    PasswordResetConfirm,
+    TokenConfirmRequest,
     TokenResponse,
     UserCreate,
     UserRead,
 )
 from app.services.google_identity import GoogleIdentityError, verify_google_credential
+from app.services.rate_limit import enforce_auth_rate_limit
+from app.services.notifications import queue_notification
 
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
@@ -56,6 +63,51 @@ def _clear_refresh_cookie(response: Response) -> None:
 def _is_expired(value: datetime) -> bool:
     expires_at = value if value.tzinfo else value.replace(tzinfo=UTC)
     return expires_at <= datetime.now(UTC)
+
+
+async def _create_action_token(
+    user: User,
+    purpose: str,
+    lifetime: timedelta,
+    db: AsyncSession,
+) -> str:
+    await db.execute(
+        update(AuthActionToken)
+        .where(
+            AuthActionToken.user_id == user.id,
+            AuthActionToken.purpose == purpose,
+            AuthActionToken.used_at.is_(None),
+        )
+        .values(used_at=utcnow())
+    )
+    raw = generate_action_token()
+    db.add(
+        AuthActionToken(
+            user_id=user.id,
+            purpose=purpose,
+            token_hash=hash_action_token(raw),
+            expires_at=datetime.now(UTC) + lifetime,
+        )
+    )
+    return raw
+
+
+async def _queue_verification(user: User, db: AsyncSession) -> None:
+    raw = await _create_action_token(
+        user,
+        "verify_email",
+        timedelta(hours=settings.email_verification_hours),
+        db,
+    )
+    await queue_notification(
+        db,
+        user_id=user.id,
+        event_type="auth.verify_email",
+        title="Verify your QuickHire email",
+        body="Confirm this email before publishing, applying, messaging, assessing, or scheduling in production.",
+        data={"action_url": f"{settings.public_frontend_url.rstrip('/')}/verify-email?token={raw}"},
+        force_email=True,
+    )
 
 
 async def _issue_session(
@@ -90,7 +142,7 @@ async def _google_identity(credential: str):
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-async def register(payload: UserCreate, response: Response, db: AsyncSession = Depends(get_db)) -> TokenResponse:
+async def register(payload: UserCreate, response: Response, _: None = Depends(enforce_auth_rate_limit), db: AsyncSession = Depends(get_db)) -> TokenResponse:
     email = payload.email.lower()
     existing = await db.scalar(select(User).where(User.email == email))
     if existing:
@@ -116,12 +168,13 @@ async def register(payload: UserCreate, response: Response, db: AsyncSession = D
         )
     )
     token_response, _ = await _issue_session(user, response, db)
+    await _queue_verification(user, db)
     await db.commit()
     return token_response
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(payload: LoginRequest, response: Response, db: AsyncSession = Depends(get_db)) -> TokenResponse:
+async def login(payload: LoginRequest, response: Response, _: None = Depends(enforce_auth_rate_limit), db: AsyncSession = Depends(get_db)) -> TokenResponse:
     user = await db.scalar(select(User).where(User.email == payload.email.lower()))
     password_valid = verify_password(payload.password, user.password_hash if user else None)
     if not user or not password_valid:
@@ -138,6 +191,7 @@ async def login(payload: LoginRequest, response: Response, db: AsyncSession = De
 async def google_auth(
     payload: GoogleAuthRequest,
     response: Response,
+    _: None = Depends(enforce_auth_rate_limit),
     db: AsyncSession = Depends(get_db),
 ) -> TokenResponse:
     google = await _google_identity(payload.credential)
@@ -186,7 +240,7 @@ async def google_auth(
 
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh(request: Request, response: Response, db: AsyncSession = Depends(get_db)) -> TokenResponse:
+async def refresh(request: Request, response: Response, _: None = Depends(enforce_auth_rate_limit), db: AsyncSession = Depends(get_db)) -> TokenResponse:
     refresh_token = request.cookies.get(settings.refresh_cookie_name)
     if not refresh_token:
         raise HTTPException(status_code=401, detail="Refresh session is missing")
@@ -249,6 +303,108 @@ async def logout(request: Request, response: Response, db: AsyncSession = Depend
     if session and session.revoked_at is None:
         session.revoked_at = utcnow()
         await db.commit()
+
+
+@router.post("/email-verification/request", status_code=status.HTTP_202_ACCEPTED)
+async def request_email_verification(
+    identity: dict = Depends(get_identity),
+    _: None = Depends(enforce_auth_rate_limit),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    user = await db.get(User, identity["sub"])
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not user.email_verified:
+        await _queue_verification(user, db)
+        db.add(AuditEvent(actor_id=user.id, action="email_verification_requested", resource_type="user", resource_id=user.id, details={}))
+        await db.commit()
+    return {"message": "If verification is required, a new email has been queued."}
+
+
+@router.post("/email-verification/confirm")
+async def confirm_email_verification(
+    payload: TokenConfirmRequest,
+    _: None = Depends(enforce_auth_rate_limit),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    row = await db.scalar(
+        select(AuthActionToken)
+        .where(
+            AuthActionToken.token_hash == hash_action_token(payload.token),
+            AuthActionToken.purpose == "verify_email",
+        )
+        .with_for_update()
+    )
+    if row is None or row.used_at is not None or _is_expired(row.expires_at):
+        raise HTTPException(status_code=400, detail="Verification link is invalid or expired")
+    user = await db.get(User, row.user_id)
+    if user is None or not user.is_active:
+        raise HTTPException(status_code=400, detail="Verification link is invalid or expired")
+    row.used_at = utcnow()
+    user.email_verified = True
+    db.add(AuditEvent(actor_id=user.id, action="email_verified", resource_type="user", resource_id=user.id, details={"method": "email_link"}))
+    await db.commit()
+    return {"message": "Email verified. Return to QuickHire and refresh your session."}
+
+
+@router.post("/password/forgot", status_code=status.HTTP_202_ACCEPTED)
+async def forgot_password(
+    payload: EmailActionRequest,
+    _: None = Depends(enforce_auth_rate_limit),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    user = await db.scalar(select(User).where(User.email == payload.email.lower()))
+    if user is not None and user.is_active and user.password_hash:
+        raw = await _create_action_token(
+            user,
+            "password_reset",
+            timedelta(minutes=settings.password_reset_minutes),
+            db,
+        )
+        await queue_notification(
+            db,
+            user_id=user.id,
+            event_type="auth.password_reset",
+            title="Reset your QuickHire password",
+            body="A password reset was requested. Ignore this message if it was not you.",
+            data={"action_url": f"{settings.public_frontend_url.rstrip('/')}/reset-password?token={raw}"},
+            force_email=True,
+        )
+        db.add(AuditEvent(actor_id=user.id, action="password_reset_requested", resource_type="user", resource_id=user.id, details={}))
+        await db.commit()
+    return {"message": "If a matching password account exists, a reset email has been queued."}
+
+
+@router.post("/password/reset")
+async def reset_password(
+    payload: PasswordResetConfirm,
+    _: None = Depends(enforce_auth_rate_limit),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    row = await db.scalar(
+        select(AuthActionToken)
+        .where(
+            AuthActionToken.token_hash == hash_action_token(payload.token),
+            AuthActionToken.purpose == "password_reset",
+        )
+        .with_for_update()
+    )
+    if row is None or row.used_at is not None or _is_expired(row.expires_at):
+        raise HTTPException(status_code=400, detail="Password reset link is invalid or expired")
+    user = await db.get(User, row.user_id)
+    if user is None or not user.is_active:
+        raise HTTPException(status_code=400, detail="Password reset link is invalid or expired")
+    row.used_at = utcnow()
+    user.password_hash = hash_password(payload.new_password)
+    user.email_verified = True
+    await db.execute(
+        update(RefreshSession)
+        .where(RefreshSession.user_id == user.id, RefreshSession.revoked_at.is_(None))
+        .values(revoked_at=utcnow())
+    )
+    db.add(AuditEvent(actor_id=user.id, action="password_reset_completed", resource_type="user", resource_id=user.id, details={"active_sessions_revoked": True}))
+    await db.commit()
+    return {"message": "Password changed. Sign in again on every device."}
 
 
 @router.get("/methods", response_model=AuthMethodsRead)

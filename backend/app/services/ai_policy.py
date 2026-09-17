@@ -4,7 +4,7 @@ from dataclasses import replace
 from typing import Any, Iterable, TypeVar
 
 
-POLICY_VERSION = "employment-ai-guardrails-0.4.0"
+POLICY_VERSION = "employment-ai-guardrails-0.5.0"
 DECISION_AUTHORITY = "human_recruiter_only"
 INTERVIEW_INPUT_MODE = "typed_answer_content_only"
 
@@ -134,5 +134,7 @@ def policy_manifest() -> dict:
             "assessment and interview generation",
             "local and external ranking inputs",
             "recruiter stage confirmation",
+            "candidate recourse isolation",
+            "revocable candidate consent before external model processing",
         ],
     }

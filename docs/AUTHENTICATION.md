@@ -1,4 +1,4 @@
-# QuickHire authentication 0.4
+# QuickHire authentication 0.5
 
 ## Session model
 
@@ -26,5 +26,10 @@ The frontend uses Google Identity Services to receive an ID-token credential. Th
 - Use the exact same Google Web client ID in backend and frontend configuration.
 - Register every exact frontend origin in the Google Cloud client.
 - Keep frontend and API on the same site or review the cookie and CSRF design before cross-site deployment.
-- Apply migration `0004_auth_governance.sql` to an existing 0.3 database.
-- Add rate limiting, email verification/recovery and secret rotation procedures before public production use.
+- Apply the checksummed migration chain through `0005_production_workflows.sql`.
+- Keep Redis-backed authentication rate limiting fail-closed in production.
+- Configure the email worker so one-time verification and password-reset links can be delivered.
+- Verification/reset credentials are stored as hashes, expire, are single-use, and supersede older unused credentials of the same purpose.
+- Password reset revokes all active refresh sessions for the account.
+- Consequential candidate/recruiter workflows require verified email when `REQUIRE_EMAIL_VERIFICATION=true`.
+- Follow the secret rotation and incident procedures in the production runbook.

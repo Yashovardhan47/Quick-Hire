@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import require_roles
+from app.api.dependencies import require_roles, require_verified_roles
 from app.api.routes.matching import refresh_candidate_matches
 from app.db.session import get_db
 from app.models.entities import AuditEvent, CandidateEvidence, CandidateProfile, UserRole
@@ -27,7 +27,7 @@ async def get_profile(
 @router.put("/me/profile", response_model=CandidateProfileInput)
 async def upsert_profile(
     payload: CandidateProfileInput,
-    identity: dict = Depends(require_roles(UserRole.candidate)),
+    identity: dict = Depends(require_verified_roles(UserRole.candidate)),
     db: AsyncSession = Depends(get_db),
 ) -> CandidateProfile:
     try:
@@ -73,7 +73,7 @@ async def list_evidence(
 @router.post("/me/evidence", response_model=EvidenceRead, status_code=201)
 async def add_evidence(
     payload: EvidenceCreate,
-    identity: dict = Depends(require_roles(UserRole.candidate)),
+    identity: dict = Depends(require_verified_roles(UserRole.candidate)),
     db: AsyncSession = Depends(get_db),
 ) -> CandidateEvidence:
     try:

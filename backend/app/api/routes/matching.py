@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies import require_roles
 from app.core.config import get_settings
 from app.db.session import get_db
-from app.models.entities import Application, ApplicationStatus, CandidateEvidence, CandidateProfile, Job, UserRole
+from app.models.entities import Application, ApplicationStatus, CandidateConsent, CandidateEvidence, CandidateProfile, Job, UserRole
 from app.schemas.api import MatchResult
 from app.services.evidence_graph import EvidenceItem
 from app.services.semantic_matching import calculate_configured_hybrid_match
@@ -21,6 +21,13 @@ async def compute_match(job_id: str, candidate_id: str, db: AsyncSession) -> Mat
     if not job or not profile:
         raise HTTPException(status_code=404, detail="Job or candidate profile not found")
     records = await db.scalars(select(CandidateEvidence).where(CandidateEvidence.candidate_id == candidate_id))
+    external_consent = await db.scalar(
+        select(CandidateConsent).where(
+            CandidateConsent.candidate_id == candidate_id,
+            CandidateConsent.purpose == "external_model_processing",
+            CandidateConsent.granted.is_(True),
+        )
+    )
     evidence = [
         EvidenceItem(
             skill=item.skill,
@@ -32,7 +39,14 @@ async def compute_match(job_id: str, candidate_id: str, db: AsyncSession) -> Mat
         )
         for item in records
     ]
-    return await calculate_configured_hybrid_match(job.description, job.requirements, profile.skills, evidence, settings)
+    return await calculate_configured_hybrid_match(
+        job.description,
+        job.requirements,
+        profile.skills,
+        evidence,
+        settings,
+        external_processing_allowed=external_consent is not None,
+    )
 
 
 async def refresh_candidate_matches(candidate_id: str, db: AsyncSession) -> list[str]:

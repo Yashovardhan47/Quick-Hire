@@ -1,5 +1,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Bot, BriefcaseBusiness, ChevronRight, Scale, UsersRound } from "lucide-react";
+import { Link } from "react-router-dom";
+import LiveBarChart from "../components/LiveBarChart";
 import { api } from "../lib/api";
 
 type Requirement = { name: string; weight: number; mandatory: boolean };
@@ -140,6 +142,15 @@ export default function RecruiterDashboard() {
     }
   }
 
+  async function setJobStatus(status: "draft" | "published" | "closed") {
+    if (!selectedJobId) return;
+    try {
+      await api(`/jobs/${selectedJobId}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
+      setMessage(status === "closed" ? "Job closed to new applications; existing applicants were notified." : `Job is now ${status}.`);
+      await loadJobs();
+    } catch (reason) { setMessage(reason instanceof Error ? reason.message : "Unable to update job"); }
+  }
+
   const selectedJob = jobs.find(job => job.id === selectedJobId);
   const averageFit = applications.length
     ? applications.reduce((total, item) => total + (item.fit_score ?? 0), 0) / applications.length
@@ -149,6 +160,15 @@ export default function RecruiterDashboard() {
     { title: "Verification", stages: ["assessment", "interview"] },
     { title: "Decision", stages: ["offer", "hired", "rejected"] },
   ], []);
+  const pipelineChart = useMemo(() => groups.map(group => ({
+    label: group.title,
+    value: applications.filter(item => group.stages.includes(item.status)).length,
+  })), [applications, groups]);
+  const fitChart = useMemo(() => [
+    { label: "75–100 evidence fit", value: applications.filter(item => (item.fit_score ?? 0) >= 75).length },
+    { label: "50–74 evidence fit", value: applications.filter(item => (item.fit_score ?? 0) >= 50 && (item.fit_score ?? 0) < 75).length },
+    { label: "Below 50 / missing", value: applications.filter(item => (item.fit_score ?? 0) < 50).length },
+  ], [applications]);
 
   return (
     <section className="workspace">
@@ -164,12 +184,17 @@ export default function RecruiterDashboard() {
         <article><Bot /><strong>Human</strong><span>Final decision owner</span></article>
       </div>
 
+      <div className="content-grid analytics-grid">
+        <LiveBarChart title="Selected-job pipeline" description="Changes with the selected role and every human-recorded stage update." data={pipelineChart} />
+        <LiveBarChart title="Evidence-fit distribution" description="A review aid derived from current applicants, never an automatic shortlist or rejection." data={fitChart} />
+      </div>
+
       <div className="review-banner">
         <div><strong>{selectedJob ? `${selectedJob.title} · ${applications.length} applicants` : "Select or publish a job"}</strong><p>First review uses candidate aliases and job evidence. Protected traits are not ranking features.</p></div>
-        <select value={selectedJobId} onChange={event => setSelectedJobId(event.target.value)} aria-label="Selected job">
+        <div className="job-select-actions"><select value={selectedJobId} onChange={event => setSelectedJobId(event.target.value)} aria-label="Selected job">
           <option value="">Choose job</option>
           {jobs.map(job => <option key={job.id} value={job.id}>{job.title} · {job.status}</option>)}
-        </select>
+        </select>{selectedJob && <button className="secondary" onClick={() => void setJobStatus(selectedJob.status === "published" ? "closed" : "published")}>{selectedJob.status === "published" ? "Close listing" : "Publish listing"}</button>}</div>
       </div>
 
       <div className="pipeline-layout">
@@ -196,6 +221,7 @@ export default function RecruiterDashboard() {
             {(selectedApplication.explanation.missing_requirements ?? []).map(item => <span className="chip warn" key={item}>{item}</span>)}
             {(selectedApplication.explanation.evidence_citations?.length ?? 0) > 0 && <div className="citation-list"><h4>Evidence provenance</h4>{selectedApplication.explanation.evidence_citations?.slice(0, 4).map((citation, index) => <div key={`${citation.source_uri}-${index}`}><strong>{citation.requirement} {citation.verified && <span>verified</span>}</strong><p>{citation.excerpt}</p><small>{citation.source_uri}</small></div>)}</div>}
             <div className="agent-note"><Bot size={18} /><div><strong>Review assistant</strong><p>{selectedApplication.explanation.next_best_actions?.[0] ?? "Review the evidence map before changing stage."}</p></div></div>
+            <div className="button-row drawer-actions"><Link className="secondary link-button" to={`/recruiter/interviews?application=${selectedApplication.id}`}>Schedule interview</Link><Link className="text-link" to="/recruiter/messages">Open messages</Link><Link className="text-link" to="/recruiter/assistant">Use assistant</Link></div>
             {(nextStages[selectedApplication.status]?.length ?? 0) > 0 && <form className="decision-form" onSubmit={moveApplication}>
               <label>Move to<select value={targetStage} onChange={event => setTargetStage(event.target.value)} required><option value="">Select next stage</option>{nextStages[selectedApplication.status].map(stage => <option key={stage} value={stage}>{stageLabel(stage)}</option>)}</select></label>
               <label>Human decision reason<textarea value={decisionReason} onChange={event => setDecisionReason(event.target.value)} minLength={10} placeholder="Record job-related evidence and reasoning…" required /></label>

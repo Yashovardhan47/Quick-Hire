@@ -1,0 +1,1 @@
+"""QuickHire background worker entrypoints."""

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import require_roles
+from app.api.dependencies import require_roles, require_verified_roles
 from app.api.routes.matching import refresh_candidate_matches
 from app.core.config import get_settings
 from app.db.session import get_db
@@ -15,6 +15,7 @@ from app.schemas.api import (
     ResumeDocumentResult,
 )
 from app.services.document_ingestion import DocumentIngestionError, MODEL_VERSION as INGESTION_VERSION, extract_document
+from app.services.malware_scanner import MalwareDetectedError, MalwareScanError, scan_bytes
 from app.services.talent_intelligence import analyze_job_description, analyze_resume
 
 
@@ -72,7 +73,7 @@ async def _persist_resume_analysis(
 @router.post("/resume/analyze", response_model=ResumeAnalysisResult)
 async def resume_analysis(
     payload: ResumeAnalysisRequest,
-    identity: dict = Depends(require_roles(UserRole.candidate)),
+    identity: dict = Depends(require_verified_roles(UserRole.candidate)),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     result = analyze_resume(payload.text)
@@ -100,10 +101,23 @@ async def resume_analysis(
 async def upload_resume(
     file: UploadFile = File(...),
     persist_evidence: bool = Form(default=True),
-    identity: dict = Depends(require_roles(UserRole.candidate)),
+    identity: dict = Depends(require_verified_roles(UserRole.candidate)),
     db: AsyncSession = Depends(get_db),
 ) -> ResumeDocumentResult:
     content = await file.read(settings.max_resume_bytes + 1)
+    if settings.malware_scan_enabled:
+        try:
+            await scan_bytes(
+                content,
+                settings.clamav_host,
+                settings.clamav_port,
+                settings.malware_scan_timeout_seconds,
+            )
+        except MalwareDetectedError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        except MalwareScanError as exc:
+            if settings.malware_scan_required:
+                raise HTTPException(status_code=503, detail=str(exc)) from exc
     try:
         extracted = extract_document(
             file.filename,
@@ -114,6 +128,11 @@ async def upload_resume(
         )
     except DocumentIngestionError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    if settings.reject_scanned_pdf_without_text and "low_text_pdf_ocr_required" in extracted.security_flags:
+        raise HTTPException(
+            status_code=422,
+            detail="This PDF contains too little extractable text. Upload an accessible text PDF, DOCX, or TXT file.",
+        )
 
     if persist_evidence:
         existing = await db.scalar(
@@ -195,6 +214,6 @@ async def upload_resume(
 @router.post("/job-description/analyze", response_model=JobAnalysisResult)
 async def job_analysis(
     payload: JobAnalysisRequest,
-    _: dict = Depends(require_roles(UserRole.recruiter, UserRole.admin)),
+    _: dict = Depends(require_verified_roles(UserRole.recruiter, UserRole.admin)),
 ) -> dict:
     return analyze_job_description(payload.title, payload.description)

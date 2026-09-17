@@ -4,8 +4,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import require_roles
 from app.api.routes.realtime import manager
+from app.core.config import get_settings
 from app.db.session import get_db
-from app.models.entities import Application, AssessmentAttempt, AuditEvent, CandidateDocument, InterviewSession, Job, User, UserRole
+from app.models.entities import (
+    Application,
+    AssessmentAttempt,
+    AuditEvent,
+    CandidateDocument,
+    CandidateRequest,
+    InterviewSchedule,
+    InterviewSession,
+    Job,
+    Message,
+    NotificationDelivery,
+    User,
+    UserRole,
+)
 from app.schemas.api import AIPolicyRead, PlatformMetrics
 from app.services.ai_policy import policy_manifest
 from app.services.semantic_matching import MODEL_VERSION
@@ -33,6 +47,7 @@ async def platform_metrics(
     _: dict = Depends(require_roles(UserRole.admin)),
     db: AsyncSession = Depends(get_db),
 ) -> PlatformMetrics:
+    settings = get_settings()
     return PlatformMetrics(
         users=await _count(db, User),
         candidates=await _count(db, User, User.role == UserRole.candidate),
@@ -44,6 +59,19 @@ async def platform_metrics(
         completed_mock_interviews=await _count(db, InterviewSession, InterviewSession.status == "completed"),
         audit_events=await _count(db, AuditEvent),
         live_connections=sum(len(sockets) for sockets in manager.connections.values()),
+        messages=await _count(db, Message),
+        scheduled_interviews=await _count(db, InterviewSchedule),
+        pending_email_deliveries=await _count(db, NotificationDelivery, NotificationDelivery.status == "pending"),
+        failed_email_deliveries=await _count(db, NotificationDelivery, NotificationDelivery.status == "failed"),
+        open_candidate_requests=await _count(
+            db, CandidateRequest, CandidateRequest.status.in_(["submitted", "in_review"])
+        ),
         model_version=MODEL_VERSION,
-        evaluation_state="dataset_required",
+        evaluation_state=(
+            "approved"
+            if settings.require_calibrated_model and settings.calibration_model_path
+            else "evaluating"
+            if settings.calibration_model_path
+            else "dataset_required"
+        ),
     )

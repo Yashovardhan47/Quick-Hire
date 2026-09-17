@@ -8,7 +8,7 @@ from app.api.routes import auth as auth_routes
 from app.core.config import get_settings
 from app.db.session import get_db
 from app.main import app
-from app.models.entities import Base, RefreshSession
+from app.models.entities import Base, Notification, RefreshSession, User
 from app.services.google_identity import GoogleIdentity
 
 
@@ -139,3 +139,61 @@ async def test_google_cannot_silently_link_or_create_admin_and_explicit_link_suc
     assert logged_out.status_code == 204
     after_logout = await client.post("/api/v1/auth/refresh")
     assert after_logout.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_email_verification_and_password_reset_tokens_are_single_use(auth_client) -> None:
+    client, session_factory = auth_client
+    registered = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "candidate@example.com",
+            "full_name": "Candidate One",
+            "password": "strong-password-123",
+            "role": "candidate",
+        },
+    )
+    assert registered.status_code == 201
+    async with session_factory() as db:
+        verification = await db.scalar(
+            select(Notification).where(Notification.event_type == "auth.verify_email")
+        )
+        verification_token = verification.data["action_url"].split("token=", 1)[1]
+
+    confirmed = await client.post(
+        "/api/v1/auth/email-verification/confirm",
+        json={"token": verification_token},
+    )
+    assert confirmed.status_code == 200
+    replayed = await client.post(
+        "/api/v1/auth/email-verification/confirm",
+        json={"token": verification_token},
+    )
+    assert replayed.status_code == 400
+    async with session_factory() as db:
+        user = await db.scalar(select(User).where(User.email == "candidate@example.com"))
+        assert user.email_verified is True
+
+    forgot = await client.post(
+        "/api/v1/auth/password/forgot",
+        json={"email": "candidate@example.com"},
+    )
+    assert forgot.status_code == 202
+    async with session_factory() as db:
+        reset_notice = await db.scalar(
+            select(Notification)
+            .where(Notification.event_type == "auth.password_reset")
+            .order_by(Notification.created_at.desc())
+        )
+        reset_token = reset_notice.data["action_url"].split("token=", 1)[1]
+    reset = await client.post(
+        "/api/v1/auth/password/reset",
+        json={"token": reset_token, "new_password": "new-strong-password-456"},
+    )
+    assert reset.status_code == 200
+    assert (await client.post("/api/v1/auth/refresh")).status_code == 401
+    logged_in = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "candidate@example.com", "password": "new-strong-password-456"},
+    )
+    assert logged_in.status_code == 200

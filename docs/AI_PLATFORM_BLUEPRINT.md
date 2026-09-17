@@ -45,9 +45,10 @@ Protected attributes may be used only in separated, access-controlled audit data
 5. **Implemented baseline:** structured typed mock interviews with disclosed content rubrics
 6. **Implemented baseline:** grounded candidate next actions and recruiter review assistance
 7. **Implemented 0.3 foundation:** secure resume files, multilingual vector retrieval, optional embedding/cross-encoder adapters, provenance and abstention
-8. **Next:** fit confidence on a representative labeled dataset and replace baseline weights only when evaluation improves
-9. **Next:** isolated coding assessments, interview scheduling, communication, appeals and accommodations
-10. **Before production:** model validation, drift, penetration testing and independent fairness audits
+8. **Implemented tooling:** fit confidence on a representative labeled dataset and enforce an approved artifact; real labels are deployment-owned
+9. **Implemented 0.5:** interview scheduling, communication, notifications, email delivery, recruiter assistance, appeals and accommodations
+10. **Implemented 0.5 infrastructure:** versioned migrations, production containers, automatic TLS, health checks, malware scanning and deployment runbook
+11. **Launch evidence still required:** representative model validation, penetration testing, jurisdiction-specific legal review and independent fairness audits
 
 ## 0.4 authentication and enforcement
 

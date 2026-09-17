@@ -15,6 +15,16 @@ export default function LoginPage() {
   const [role, setRole] = useState<"candidate" | "recruiter">("candidate");
   const [error, setError] = useState("");
   const [working, setWorking] = useState(false);
+  const [forgot, setForgot] = useState(false);
+
+  async function requestReset(event: FormEvent) {
+    event.preventDefault(); setWorking(true); setError("");
+    try {
+      const result = await api<{ message: string }>("/auth/password/forgot", { method: "POST", body: JSON.stringify({ email }) });
+      setError(result.message);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to request password reset"); }
+    finally { setWorking(false); }
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -63,10 +73,11 @@ export default function LoginPage() {
         <div className="trust-line"><ShieldCheck size={20} /> Protected traits are excluded from ranking.</div>
       </section>
       <section className="auth-form-wrap">
-        <form className="auth-form" onSubmit={submit}>
+        <form className="auth-form" onSubmit={forgot ? requestReset : submit}>
           <Sparkles size={24} />
-          <h2>{mode === "login" ? "Welcome back" : "Create your workspace"}</h2>
-          <p>{mode === "login" ? "Sign in to your role-specific dashboard." : "Choose how you will use QuickHire."}</p>
+          <h2>{forgot ? "Reset your password" : mode === "login" ? "Welcome back" : "Create your workspace"}</h2>
+          <p>{forgot ? "Enter the email for your password account." : mode === "login" ? "Sign in to your role-specific dashboard." : "Choose how you will use QuickHire."}</p>
+          {forgot ? <><label>Email<input type="email" value={email} onChange={event => setEmail(event.target.value)} required /></label>{error && <div className="inline-notice" role="status">{error}</div>}<button className="primary wide" disabled={working}>{working ? "Please wait…" : "Send reset link"}</button><button type="button" className="text-button" onClick={() => { setForgot(false); setError(""); }}>Back to sign in</button></> : <>
           {mode === "register" && (
             <>
               <label>Full name<input value={fullName} onChange={event => setFullName(event.target.value)} minLength={2} required /></label>
@@ -87,6 +98,8 @@ export default function LoginPage() {
           <button type="button" className="text-button auth-switch" onClick={() => setMode(mode === "login" ? "register" : "login")}>
             {mode === "login" ? "New to QuickHire? Create an account" : "Already have an account? Sign in"}
           </button>
+          {mode === "login" && <button type="button" className="text-button auth-switch" onClick={() => { setForgot(true); setError(""); }}>Forgot password?</button>}
+          </>}
         </form>
       </section>
     </main>

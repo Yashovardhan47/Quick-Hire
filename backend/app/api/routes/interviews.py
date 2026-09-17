@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import require_roles
+from app.api.dependencies import require_verified_roles
 from app.api.routes.realtime import manager
 from app.db.session import get_db
 from app.models.entities import AuditEvent, InterviewSession, Job, UserRole
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/interviews", tags=["structured mock interviews"])
 @router.post("/mock/{job_id}", response_model=InterviewSessionRead, status_code=201)
 async def create_mock_interview(
     job_id: str,
-    identity: dict = Depends(require_roles(UserRole.candidate)),
+    identity: dict = Depends(require_verified_roles(UserRole.candidate)),
     db: AsyncSession = Depends(get_db),
 ) -> InterviewSessionRead:
     job = await db.get(Job, job_id)
@@ -45,7 +45,7 @@ async def create_mock_interview(
 async def submit_mock_interview(
     session_id: str,
     payload: InterviewSubmit,
-    identity: dict = Depends(require_roles(UserRole.candidate)),
+    identity: dict = Depends(require_verified_roles(UserRole.candidate)),
     db: AsyncSession = Depends(get_db),
 ) -> InterviewResult:
     session = await db.get(InterviewSession, session_id)
