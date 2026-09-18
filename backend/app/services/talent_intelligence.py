@@ -3,7 +3,18 @@ import re
 from app.services.ai_policy import prohibited_categories, scrub_prohibited_text
 
 
-MODEL_VERSION = "multilingual-talent-normalizer-0.3.0"
+MODEL_VERSION = "multilingual-talent-normalizer-0.6.0"
+
+DEGREE_PATTERNS: tuple[tuple[str, str], ...] = (
+    (r"\b(?:b\.?\s*tech|bachelor of technology)\b", "B.Tech"),
+    (r"\b(?:b\.?\s*e\.?|bachelor of engineering)\b", "B.E."),
+    (r"\b(?:b\.?\s*sc|bachelor of science)\b", "B.Sc."),
+    (r"\b(?:m\.?\s*tech|master of technology)\b", "M.Tech"),
+    (r"\b(?:m\.?\s*sc|master of science)\b", "M.Sc."),
+    (r"\b(?:m\.?\s*b\.?\s*a|master of business administration)\b", "MBA"),
+    (r"\b(?:ph\.?\s*d|doctor of philosophy)\b", "Ph.D."),
+    (r"\b(?:diploma|polytechnic)\b", "Diploma"),
+)
 
 SKILL_TAXONOMY: dict[str, tuple[str, ...]] = {
     "Python": ("python", "pandas", "numpy"),
@@ -127,6 +138,22 @@ def analyze_resume(text: str, segments: list[dict[str, str]] | None = None) -> d
         for sentence in _sentences(text)
         if re.search(r"\b(project|portfolio|github|deployed|created|prototype)\b|परियोजना|प्रोजेक्ट|ప్రాజెక్ట్", sentence, re.I)
     ][:6]
+    education_signals = [
+        _redact_contact_details(sentence)[:240]
+        for sentence in _sentences(text)
+        if re.search(
+            r"\b(?:education|university|college|institute|degree|bachelor|master|b\.?\s*tech|m\.?\s*tech|b\.?\s*sc|m\.?\s*sc|mba|ph\.?\s*d|diploma)\b|शिक्षा|विश्वविद्यालय|डिग्री|విద్య|విశ్వవిద్యాలయం",
+            sentence,
+            re.I,
+        )
+    ][:6]
+    degrees = list(
+        dict.fromkeys(
+            label
+            for pattern, label in DEGREE_PATTERNS
+            if re.search(pattern, text, re.I)
+        )
+    )
     warnings = []
     if len(text.split()) < 120:
         warnings.append("The resume has limited detail; extracted claims should be verified with projects or an assessment.")
@@ -143,6 +170,13 @@ def analyze_resume(text: str, segments: list[dict[str, str]] | None = None) -> d
         "experience_years": experience_years,
         "experience_signals": experience_signals,
         "project_signals": project_signals,
+        "education_signals": education_signals,
+        "entities": {
+            "skills": [item["skill"] for item in skills],
+            "degrees": degrees,
+            "experience_years": [f"{experience_years:g}"] if experience_years is not None else [],
+            "languages": detect_language_codes(text),
+        },
         "summary": f"Detected {len(skills)} job-related skills{years_phrase}. All extracted claims remain unverified until supported by evidence.",
         "quality_warnings": warnings,
         "excluded_fields": EXCLUDED_FIELDS,

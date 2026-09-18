@@ -1,4 +1,4 @@
-# QuickHire employment-AI policy 0.5
+# QuickHire employment-AI policy 0.6
 
 ## Enforced decision boundary
 
@@ -28,7 +28,11 @@ The privacy-preserving local EvidenceGraph path is the default. Even when an ope
 
 ## Interview and assessment behavior
 
-Mock interviews accept typed answers only. Questions come only from remaining job-related competencies. Feedback measures the disclosed structure of the answer—context, action, result and reflection—and always requires human interpretation. The platform has no path for camera, microphone, facial, vocal, emotional, personality, disability or honesty analysis.
+Mock interviews evaluate answer text only. Candidates may type that text or explicitly send a short recording to an approved speech-to-text provider. The recording is bounded, discarded immediately after transcription and never stored in an interview session. Candidates can edit the transcript before submission. Evaluation receives no waveform, vocal feature, accent, emotion or biometric signal.
+
+RAG questions come only from remaining job-related competencies and sanitized evidence chunks. Retrieved document text is marked as untrusted and cannot override the system policy. Feedback measures disclosed answer-content criteria and always requires human interpretation. The platform has no camera or biometric-analysis path.
+
+The resume, retrieval, interview, evaluation and recruiter-copilot agents are specialist services with recorded traces. None has an application-stage mutation tool. The recruiter copilot can search and summarize only applications belonging to the signed-in recruiter's selected job.
 
 Objective assessment answers can add competency evidence. Questions outside the controlled bank are saved for human review and do not change the automated score.
 

@@ -43,6 +43,22 @@ services:
       start_period: 90s
     networks: [private]
 
+  ai-worker:
+    profiles: ["private-ai"]
+    build:
+      context: .
+      dockerfile: ai-worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      AI_WORKER_TOKEN: ${AI_API_KEY:-disabled}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2}
+      RERANKER_MODEL: ${RERANKER_MODEL:-cross-encoder/ms-marco-MiniLM-L-6-v2}
+      TRANSCRIPTION_MODEL: ${TRANSCRIPTION_MODEL:-small}
+      WHISPER_LOCAL_MODEL: ${WHISPER_LOCAL_MODEL:-small}
+    volumes:
+      - quickhire_models:/models
+    networks: [private]
+
   migrate:
     build:
       context: .
@@ -123,3 +139,4 @@ volumes:
   quickhire_caddy_data:
   quickhire_caddy_config:
   quickhire_clamav:
+  quickhire_models:

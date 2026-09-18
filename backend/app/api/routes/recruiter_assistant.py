@@ -5,12 +5,26 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import require_verified_roles
+from app.core.config import get_settings
 from app.db.session import get_db
-from app.models.entities import Application, AuditEvent, Job, UserRole
-from app.schemas.api import RecruiterAssistantRequest, RecruiterAssistantResponse
+from app.models.entities import AgentRun, Application, AuditEvent, Job, UserRole
+from app.schemas.api import (
+    CopilotCandidateMatch,
+    RecruiterAssistantRequest,
+    RecruiterAssistantResponse,
+    RecruiterCopilotChatRequest,
+    RecruiterCopilotChatResponse,
+)
+from app.services.recruiter_copilot import (
+    MODEL_VERSION as COPILOT_MODEL_VERSION,
+    answer_for_plan,
+    execute_read_only_plan,
+    interpret_intent,
+)
 
 
 router = APIRouter(prefix="/recruiter-assistant", tags=["recruiter assistance"])
+settings = get_settings()
 
 
 def _text_list(value) -> list[str]:
@@ -69,8 +83,8 @@ async def assist_recruiter(
             competencies = gaps[:3] or [str(item.get("name", "job requirement")) for item in job.requirements[:3]]
             response = RecruiterAssistantResponse(
                 action=payload.action,
-                title="Structured typed interview plan",
-                summary="Ask every candidate comparable, job-related questions and score only the typed answer against a disclosed rubric.",
+                title="Structured answer-content interview plan",
+                summary="Ask every candidate comparable, job-related questions and evaluate only editable answer text against a disclosed rubric.",
                 items=[f"Ask for a concrete example demonstrating {skill}; assess relevance, method, and measurable outcome." for skill in competencies],
                 warnings=[*warnings, "Never score face, voice, accent, emotion, personality, disability, honesty, or protected traits."],
             )
@@ -98,3 +112,70 @@ async def assist_recruiter(
     )
     await db.commit()
     return response
+
+
+@router.post("/jobs/{job_id}/chat", response_model=RecruiterCopilotChatResponse)
+async def chat_with_recruiter_copilot(
+    job_id: str,
+    payload: RecruiterCopilotChatRequest,
+    identity: dict = Depends(require_verified_roles(UserRole.recruiter)),
+    db: AsyncSession = Depends(get_db),
+) -> RecruiterCopilotChatResponse:
+    job = await db.get(Job, job_id)
+    if job is None or job.recruiter_id != identity["sub"]:
+        raise HTTPException(status_code=404, detail="Job not found")
+    applications = list(await db.scalars(select(Application).where(Application.job_id == job.id)))
+    if payload.application_id and not any(item.id == payload.application_id for item in applications):
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    plan, intent_trace = await interpret_intent(payload.message, job, settings)
+    rows, evidence_notes = execute_read_only_plan(applications, plan, payload.application_id)
+    trace = [
+        intent_trace,
+        {
+            "agent": "evidence_search_agent",
+            "status": "completed",
+            "detail": "Searched only applications attached to the selected recruiter-owned job.",
+            "data": {"authorized_records": len(applications), "returned_records": len(rows)},
+        },
+        {
+            "agent": "review_brief_agent",
+            "status": "completed",
+            "detail": "Prepared an advisory summary without changing any application stage.",
+            "data": {"decision_authority": "human_recruiter_only"},
+        },
+    ]
+    answer = answer_for_plan(job, plan, rows, len(applications))
+    warnings = [
+        "This copilot can search and summarize authorized job evidence but cannot shortlist, reject, offer, hire, or change a stage.",
+        "Fit values are review aids with uncertainty, not eligibility decisions.",
+    ]
+    db.add(
+        AgentRun(
+            actor_id=identity["sub"],
+            workflow="recruiter_copilot_read_only",
+            resource_type="job",
+            resource_id=job.id,
+            trace=trace,
+            output={"intent": plan["intent"], "result_count": len(rows)},
+            model_version=COPILOT_MODEL_VERSION,
+        )
+    )
+    db.add(
+        AuditEvent(
+            actor_id=identity["sub"],
+            action="recruiter_copilot_query",
+            resource_type="job",
+            resource_id=job.id,
+            details={"intent": plan["intent"], "result_count": len(rows), "read_only": True},
+        )
+    )
+    await db.commit()
+    return RecruiterCopilotChatResponse(
+        answer=answer,
+        interpreted_intent=plan["intent"],
+        candidates=[CopilotCandidateMatch(**row) for row in rows],
+        evidence_notes=evidence_notes,
+        agent_trace=trace,
+        warnings=warnings,
+    )

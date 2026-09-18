@@ -10,6 +10,27 @@ from app.services.malware_scanner import MalwareScanError, ping as ping_malware_
 router = APIRouter(tags=["system"])
 
 
+@router.get("/api/v1/capabilities")
+async def capabilities() -> dict:
+    settings = get_settings()
+    return {
+        "rag_vector_retrieval": True,
+        "multi_agent_workflows": True,
+        "external_llm_configured": bool(
+            settings.external_model_data_processing_enabled
+            and settings.llm_api_url
+            and settings.ai_api_key
+        ),
+        "voice_transcription_configured": bool(
+            settings.voice_transcription_enabled
+            and settings.transcription_api_url
+            and settings.ai_api_key
+        ),
+        "voice_evaluation_enabled": False,
+        "autonomous_hiring_enabled": False,
+    }
+
+
 @router.get("/health/live")
 async def liveness() -> dict:
     return {"status": "ok", "service": "quickhire-api"}

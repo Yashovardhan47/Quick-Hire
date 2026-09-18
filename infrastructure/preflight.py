@@ -100,6 +100,14 @@ def main() -> int:
         errors.append("EMAIL_DELIVERY_ENABLED must be true when verified email is required")
     if values.get("REQUIRE_CALIBRATED_MODEL", "false").lower() == "true" and not values.get("CALIBRATION_MODEL_PATH"):
         errors.append("CALIBRATION_MODEL_PATH is required when calibrated confidence is enforced")
+    if values.get("VOICE_TRANSCRIPTION_ENABLED", "false").lower() == "true":
+        if values.get("EXTERNAL_MODEL_DATA_PROCESSING_ENABLED", "false").lower() != "true":
+            errors.append("EXTERNAL_MODEL_DATA_PROCESSING_ENABLED must be true when voice transcription is enabled")
+        for key in ("AI_API_KEY", "TRANSCRIPTION_API_URL", "TRANSCRIPTION_MODEL"):
+            if not values.get(key):
+                errors.append(f"{key} is required when voice transcription is enabled")
+    if values.get("LLM_API_URL") and not values.get("AI_API_KEY"):
+        errors.append("AI_API_KEY is required when LLM_API_URL is configured")
     if values.get("MALWARE_SCAN_REQUIRED", "false").lower() == "true":
         if values.get("MALWARE_SCAN_ENABLED", "false").lower() != "true":
             errors.append("MALWARE_SCAN_ENABLED must be true when malware scanning is required")

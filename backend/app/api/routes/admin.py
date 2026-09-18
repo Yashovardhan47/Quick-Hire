@@ -8,13 +8,16 @@ from app.core.config import get_settings
 from app.db.session import get_db
 from app.models.entities import (
     Application,
+    AgentRun,
     AssessmentAttempt,
     AuditEvent,
     CandidateDocument,
+    CandidateKnowledgeChunk,
     CandidateRequest,
     InterviewSchedule,
     InterviewSession,
     Job,
+    JobKnowledgeChunk,
     Message,
     NotificationDelivery,
     User,
@@ -66,6 +69,10 @@ async def platform_metrics(
         open_candidate_requests=await _count(
             db, CandidateRequest, CandidateRequest.status.in_(["submitted", "in_review"])
         ),
+        knowledge_chunks=(
+            await _count(db, CandidateKnowledgeChunk) + await _count(db, JobKnowledgeChunk)
+        ),
+        agent_runs=await _count(db, AgentRun),
         model_version=MODEL_VERSION,
         evaluation_state=(
             "approved"

@@ -4,9 +4,9 @@ from dataclasses import replace
 from typing import Any, Iterable, TypeVar
 
 
-POLICY_VERSION = "employment-ai-guardrails-0.5.0"
+POLICY_VERSION = "employment-ai-guardrails-0.6.0"
 DECISION_AUTHORITY = "human_recruiter_only"
-INTERVIEW_INPUT_MODE = "typed_answer_content_only"
+INTERVIEW_INPUT_MODE = "answer_text_only_typed_or_transcribed"
 
 PROHIBITED_SIGNAL_PATTERNS: dict[str, tuple[str, ...]] = {
     "appearance_or_biometrics": (
@@ -136,5 +136,7 @@ def policy_manifest() -> dict:
             "recruiter stage confirmation",
             "candidate recourse isolation",
             "revocable candidate consent before external model processing",
+            "audio discarded after optional transcription; only editable answer text reaches evaluation",
+            "agent tools are advisory and have no application-stage mutation capability",
         ],
     }

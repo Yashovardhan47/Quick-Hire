@@ -1,4 +1,4 @@
-# Reproducible Python 3.12 dependency set for QuickHire 0.5.0.
+# Reproducible Python 3.12 dependency set for QuickHire 0.6.0.
 # Update this file only after validating backend/requirements.txt and the full test suite.
 Mako==1.4.1
 MarkupSafe==3.0.3

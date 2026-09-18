@@ -49,4 +49,5 @@ def test_policy_manifest_disables_automated_decisions_and_limits_interview_input
 
     assert manifest["decision_authority"] == "human_recruiter_only"
     assert manifest["autonomous_stage_changes_allowed"] is False
-    assert manifest["interview_input_mode"] == "typed_answer_content_only"
+    assert manifest["interview_input_mode"] == "answer_text_only_typed_or_transcribed"
+    assert any("audio discarded" in point for point in manifest["enforcement_points"])

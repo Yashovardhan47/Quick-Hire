@@ -229,6 +229,8 @@ class ResumeAnalysisResult(BaseModel):
     experience_years: float | None
     experience_signals: list[str]
     project_signals: list[str]
+    education_signals: list[str] = Field(default_factory=list)
+    entities: dict[str, list[str]] = Field(default_factory=dict)
     summary: str
     quality_warnings: list[str]
     excluded_fields: list[str]
@@ -312,6 +314,7 @@ class InterviewQuestion(BaseModel):
     competency: str
     prompt: str
     evaluation_criteria: list[str]
+    evidence_citations: list[EvidenceCitation] = Field(default_factory=list)
 
 
 class InterviewSessionRead(BaseModel):
@@ -335,6 +338,9 @@ class InterviewResult(BaseModel):
     feedback: list[str]
     human_review_required: bool = True
     model_version: str
+    evaluation_mode: str = "local_content_rubric"
+    evidence_citations: list[EvidenceCitation] = Field(default_factory=list)
+    agent_trace: list[dict] = Field(default_factory=list)
 
 
 class ApplicationStatusUpdate(BaseModel):
@@ -365,6 +371,39 @@ class RecruiterAssistantResponse(BaseModel):
     items: list[str]
     warnings: list[str]
     decision_notice: Literal["advisory_only_human_decision_required"] = "advisory_only_human_decision_required"
+
+
+class RecruiterCopilotChatRequest(BaseModel):
+    message: str = Field(min_length=3, max_length=2_000)
+    application_id: str | None = None
+
+
+class CopilotCandidateMatch(BaseModel):
+    application_id: str
+    candidate_label: str
+    status: str
+    fit_score: float | None
+    fit_confidence: float | None
+    matched_requirements: list[str] = Field(default_factory=list)
+    missing_requirements: list[str] = Field(default_factory=list)
+
+
+class RecruiterCopilotChatResponse(BaseModel):
+    answer: str
+    interpreted_intent: str
+    candidates: list[CopilotCandidateMatch] = Field(default_factory=list)
+    evidence_notes: list[str] = Field(default_factory=list)
+    agent_trace: list[dict] = Field(default_factory=list)
+    warnings: list[str]
+    decision_notice: Literal["advisory_only_human_decision_required"] = "advisory_only_human_decision_required"
+
+
+class VoiceTranscriptRead(BaseModel):
+    transcript: str
+    retained_audio: Literal[False] = False
+    evaluation_basis: Literal["answer_text_only"] = "answer_text_only"
+    model_version: str
+    notice: str
 
 
 class MessageCreate(BaseModel):
@@ -501,6 +540,8 @@ class PlatformMetrics(BaseModel):
     pending_email_deliveries: int
     failed_email_deliveries: int
     open_candidate_requests: int
+    knowledge_chunks: int
+    agent_runs: int
     model_version: str
     evaluation_state: Literal["dataset_required", "evaluating", "approved"]
 
@@ -508,7 +549,7 @@ class PlatformMetrics(BaseModel):
 class AIPolicyRead(BaseModel):
     version: str
     decision_authority: Literal["human_recruiter_only"]
-    interview_input_mode: Literal["typed_answer_content_only"]
+    interview_input_mode: Literal["answer_text_only_typed_or_transcribed"]
     autonomous_stage_changes_allowed: Literal[False]
     prohibited_signal_categories: list[str]
     enforcement_points: list[str]

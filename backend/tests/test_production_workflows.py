@@ -91,7 +91,7 @@ async def test_recruiter_assistant_is_advisory_and_scoped() -> None:
             db,
         )
         assert response.decision_notice == "advisory_only_human_decision_required"
-        assert any("typed" in item.lower() for item in [response.summary, *response.items])
+        assert any("editable answer text" in item.lower() for item in [response.summary, *response.items])
         assert any("Never score face" in warning for warning in response.warnings)
         refreshed = await db.get(Application, application.id)
         assert refreshed.status.value == "applied"

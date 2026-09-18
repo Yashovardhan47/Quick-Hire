@@ -6,6 +6,7 @@ def test_resume_analysis_extracts_job_evidence_and_excludes_sensitive_fields() -
     Data analyst test@example.com +91 98765 43210 with 3 years of experience using Python, pandas, PostgreSQL and Power BI.
     Built a customer churn project and deployed a dashboard that reduced weekly reporting time by 30%.
     Worked with stakeholders to define metrics and present analytical insights.
+    Education: B.Tech in Computer Science from Example University.
     """ * 4
 
     result = analyze_resume(text)
@@ -13,6 +14,8 @@ def test_resume_analysis_extracts_job_evidence_and_excludes_sensitive_fields() -
     assert {item["skill"] for item in result["skills"]} >= {"Python", "SQL", "Power BI"}
     assert result["experience_years"] == 3
     assert result["project_signals"]
+    assert result["education_signals"]
+    assert "B.Tech" in result["entities"]["degrees"]
     assert "age or date of birth" in result["excluded_fields"]
     assert all("test@example.com" not in item["evidence_excerpt"] for item in result["skills"])
     assert all("98765" not in item["evidence_excerpt"] for item in result["skills"])

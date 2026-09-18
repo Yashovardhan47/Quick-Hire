@@ -2,7 +2,23 @@
 
 QuickHire EvidenceGraph is the AI-first evolution of Quick-Hire. It connects job requirements to verifiable candidate evidence from profiles, projects, assessments and structured interviews. AI produces transparent recommendations with confidence and missing-evidence explanations; a human recruiter remains responsible for employment decisions.
 
-## Production-workflow release · 0.5
+## Evidence-grounded agent release · 0.6
+
+- Sanitized resume and job chunks stored as 384-dimensional `pgvector` records
+- HNSW cosine indexes and vector preselection before final EvidenceGraph ranking
+- RAG-grounded interview questions with inspectable document and job citations
+- Optional provider-backed LLM generation and content evaluation with strict JSON validation
+- Five auditable specialist roles: resume, retrieval, interview, evaluation and recruiter-copilot agents
+- Natural-language recruiter search over the authorized applicant queue, with read-only tools
+- Optional speech-to-text using Whisper-compatible providers; audio is discarded and only editable text reaches evaluation
+- Browser text-to-speech for interview questions
+- Private optional model worker with Sentence Transformers, cross-encoder reranking and faster-whisper
+- Education and degree extraction alongside skills, experience and project signals
+- Agent-run audit records and interview evaluation provenance
+
+Release 0.6 keeps every employment decision human-owned. RAG can improve grounding and traceability, but it cannot guarantee factual output or eliminate hallucinations.
+
+The 0.5 production workflow remains available:
 
 - Short-lived, issuer/audience/type-bound access JWTs
 - Rotating opaque refresh sessions in strict, HTTP-only cookies
@@ -44,7 +60,7 @@ The EvidenceGraph 0.3 model capabilities remain available:
 - Evidence citations, uncertainty intervals, confidence states and low-evidence abstention
 - Optional external multilingual embedding and cross-encoder adapters, disabled by default
 - Adaptive objective assessments selected from missing job evidence
-- Structured typed mock interviews scored only against a disclosed content rubric
+- Structured mock interviews scored only from editable answer text against a disclosed content rubric
 - Candidate, recruiter and platform-admin dashboards connected to the API
 - Blind-first recruiter pipeline with valid stage transitions and mandatory human reasons
 - Authenticated WebSocket events for application, assessment and interview updates
@@ -57,6 +73,21 @@ The EvidenceGraph 0.3 model capabilities remain available:
 1. Copy `.env.example` to `.env` and replace every development secret.
 2. Run `docker compose up --build`.
 3. Open `http://localhost:5173`; API documentation is at `http://localhost:8000/docs`.
+
+The default path needs no external model and uses deterministic local retrieval and disclosed rubrics. To run the optional private neural worker, set a non-placeholder `AI_API_KEY`, configure the three worker URLs shown in `ai-worker/README.md`, grant candidate consent in the Account page, and run:
+
+```bash
+docker compose --profile neural-ai up --build
+```
+
+An approved OpenAI-compatible chat endpoint may be configured with `LLM_API_URL` and `LLM_MODEL`. The direct, schema-validated adapter also works with compatible gateways for other model families. QuickHire does not require LangChain, and PostgreSQL with `pgvector` is the selected vector database rather than operating ChromaDB, Pinecone and FAISS simultaneously.
+
+After upgrading an existing database, rebuild retained job and resume-evidence indexes with:
+
+```bash
+cd backend
+python -m app.cli.reindex_knowledge
+```
 
 ### Enable Google sign-in
 
@@ -103,7 +134,7 @@ The production Compose stack includes PostgreSQL, authenticated Redis, a checksu
 
 ## Decision boundary
 
-QuickHire may retrieve, structure and summarize job-related evidence. It does not autonomously reject, shortlist or hire. Interview feedback is limited to typed answer content and never evaluates appearance, voice, accent, emotion, personality, disability, honesty or other protected and sensitive traits. These rules are enforced in API validation, ranking-input sanitation, assessment/interview generation, recruiter confirmations, tests and the admin policy endpoint.
+QuickHire may retrieve, structure and summarize job-related evidence. It does not autonomously reject, shortlist or hire. Interview feedback is limited to editable answer text. Optional audio can create that text, but the recording is discarded and no audio feature reaches an evaluator. The platform never evaluates appearance, voice, accent, emotion, personality, disability, honesty or other protected and sensitive traits. These rules are enforced in API validation, ranking-input sanitation, assessment/interview generation, recruiter confirmations, tests and the admin policy endpoint.
 
 The previous PHP prototype remains in the branch history for reference. Do not reuse credentials that were ever committed to the public repository.
 

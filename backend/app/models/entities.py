@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 
 from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, JSON, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from pgvector.sqlalchemy import Vector
 
 
 def new_id() -> str:
@@ -143,6 +144,23 @@ class CandidateDocument(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class CandidateKnowledgeChunk(Base):
+    """Sanitized, bounded resume evidence used by local RAG and vector retrieval."""
+
+    __tablename__ = "candidate_knowledge_chunks"
+    __table_args__ = (UniqueConstraint("document_id", "locator", "content_hash", name="uq_candidate_chunk_source"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    candidate_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    document_id: Mapped[str] = mapped_column(ForeignKey("candidate_documents.id", ondelete="CASCADE"), index=True)
+    locator: Mapped[str] = mapped_column(String(160))
+    content: Mapped[str] = mapped_column(Text)
+    content_hash: Mapped[str] = mapped_column(String(64), index=True)
+    embedding: Mapped[list[float]] = mapped_column(Vector(384))
+    model_version: Mapped[str] = mapped_column(String(80), default="local-feature-hash-384-v1")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class Job(Base):
     __tablename__ = "jobs"
 
@@ -155,6 +173,20 @@ class Job(Base):
     employment_type: Mapped[str] = mapped_column(String(60), default="full-time")
     requirements: Mapped[list] = mapped_column(JSON, default=list)
     status: Mapped[str] = mapped_column(String(40), default="draft", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class JobKnowledgeChunk(Base):
+    __tablename__ = "job_knowledge_chunks"
+    __table_args__ = (UniqueConstraint("job_id", "locator", "content_hash", name="uq_job_chunk_source"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    job_id: Mapped[str] = mapped_column(ForeignKey("jobs.id", ondelete="CASCADE"), index=True)
+    locator: Mapped[str] = mapped_column(String(160))
+    content: Mapped[str] = mapped_column(Text)
+    content_hash: Mapped[str] = mapped_column(String(64), index=True)
+    embedding: Mapped[list[float]] = mapped_column(Vector(384))
+    model_version: Mapped[str] = mapped_column(String(80), default="local-feature-hash-384-v1")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
@@ -221,6 +253,9 @@ class InterviewSession(Base):
     content_feedback: Mapped[list] = mapped_column(JSON, default=list)
     model_version: Mapped[str] = mapped_column(String(80), default="structured-interview-0.2.0")
     human_reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
+    input_mode: Mapped[str] = mapped_column(String(40), default="answer_text_only")
+    agent_trace: Mapped[list] = mapped_column(JSON, default=list)
+    evaluation_provenance: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
 class Recommendation(Base):
@@ -232,6 +267,24 @@ class Recommendation(Base):
     recommendation_type: Mapped[str] = mapped_column(String(80))
     payload: Mapped[dict] = mapped_column(JSON)
     model_version: Mapped[str] = mapped_column(String(80))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class AgentRun(Base):
+    """Auditable trace of advisory agent orchestration; never a decision record."""
+
+    __tablename__ = "agent_runs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    actor_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    workflow: Mapped[str] = mapped_column(String(100), index=True)
+    resource_type: Mapped[str] = mapped_column(String(80))
+    resource_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    status: Mapped[str] = mapped_column(String(40), default="completed", index=True)
+    trace: Mapped[list] = mapped_column(JSON, default=list)
+    output: Mapped[dict] = mapped_column(JSON, default=dict)
+    model_version: Mapped[str] = mapped_column(String(120))
+    advisory_only: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 

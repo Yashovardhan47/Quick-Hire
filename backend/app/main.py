@@ -24,6 +24,7 @@ from app.api.routes import (
     recommendations,
     schedules,
     system,
+    voice,
 )
 from app.core.config import get_settings
 from app.core.observability import request_observability
@@ -61,6 +62,14 @@ async def lifespan(_: FastAPI):
         raise RuntimeError("Email delivery must be enabled when verified email is required")
     if settings.malware_scan_required and not settings.malware_scan_enabled:
         raise RuntimeError("Malware scanning must be enabled when it is required")
+    if settings.voice_transcription_enabled and (
+        not settings.external_model_data_processing_enabled
+        or not settings.transcription_api_url
+        or not settings.ai_api_key
+    ):
+        raise RuntimeError(
+            "Voice transcription requires external processing, a transcription endpoint and an AI provider key"
+        )
     if settings.require_calibrated_model and (
         not settings.calibration_model_path or not Path(settings.calibration_model_path).is_file()
     ):
@@ -78,7 +87,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.5.0",
+    version="0.6.0",
     description="Explainable recruitment intelligence with human-owned employment decisions.",
     lifespan=lifespan,
     docs_url=None if settings.app_env == "production" else "/docs",
@@ -110,6 +119,7 @@ app.include_router(recruiter_assistant.router, prefix="/api/v1")
 app.include_router(schedules.router, prefix="/api/v1")
 app.include_router(assessments.router, prefix="/api/v1")
 app.include_router(interviews.router, prefix="/api/v1")
+app.include_router(voice.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
 app.include_router(realtime.router, prefix="/api/v1")
 app.include_router(system.router)
@@ -117,4 +127,4 @@ app.include_router(system.router)
 
 @app.get("/health", tags=["system"])
 async def health() -> dict:
-    return {"status": "ok", "service": "quickhire-evidencegraph", "version": "0.5.0"}
+    return {"status": "ok", "service": "quickhire-evidencegraph", "version": "0.6.0"}

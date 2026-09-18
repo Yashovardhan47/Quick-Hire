@@ -6,7 +6,7 @@ from app.api.dependencies import require_roles, require_verified_roles
 from app.api.routes.matching import refresh_candidate_matches
 from app.core.config import get_settings
 from app.db.session import get_db
-from app.models.entities import AuditEvent, CandidateDocument, CandidateEvidence, CandidateProfile, UserRole
+from app.models.entities import AuditEvent, CandidateDocument, CandidateEvidence, CandidateProfile, User, UserRole
 from app.schemas.api import (
     JobAnalysisRequest,
     JobAnalysisResult,
@@ -16,6 +16,7 @@ from app.schemas.api import (
 )
 from app.services.document_ingestion import DocumentIngestionError, MODEL_VERSION as INGESTION_VERSION, extract_document
 from app.services.malware_scanner import MalwareDetectedError, MalwareScanError, scan_bytes
+from app.services.knowledge_retrieval import replace_candidate_chunks
 from app.services.talent_intelligence import analyze_job_description, analyze_resume
 
 
@@ -178,6 +179,14 @@ async def upload_resume(
         db.add(document)
         await db.flush()
         await _persist_resume_analysis(db, identity["sub"], result, document.id)
+        candidate = await db.get(User, identity["sub"])
+        chunk_count = await replace_candidate_chunks(
+            db,
+            candidate_id=identity["sub"],
+            document_id=document.id,
+            segments=extracted.segments,
+            redact_terms=(candidate.full_name, candidate.email) if candidate else (),
+        )
         refreshed = await refresh_candidate_matches(identity["sub"], db)
         db.add(
             AuditEvent(
@@ -190,6 +199,7 @@ async def upload_resume(
                     "skill_count": len(result["skills"]),
                     "applications_refreshed": len(refreshed),
                     "security_flags": extracted.security_flags,
+                    "knowledge_chunk_count": chunk_count,
                     "model_version": INGESTION_VERSION,
                 },
             )

@@ -26,6 +26,22 @@ services:
       timeout: 3s
       retries: 10
 
+  ai-worker:
+    profiles: ["neural-ai"]
+    build:
+      context: .
+      dockerfile: ai-worker/Dockerfile
+    environment:
+      AI_WORKER_TOKEN: ${AI_API_KEY:-local-neural-worker-token}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2}
+      RERANKER_MODEL: ${RERANKER_MODEL:-cross-encoder/ms-marco-MiniLM-L-6-v2}
+      TRANSCRIPTION_MODEL: ${TRANSCRIPTION_MODEL:-small}
+      WHISPER_LOCAL_MODEL: ${WHISPER_LOCAL_MODEL:-small}
+    volumes:
+      - quickhire_models:/models
+    ports:
+      - "8100:8100"
+
   backend:
     build:
       context: .
@@ -51,3 +67,4 @@ services:
 
 volumes:
   quickhire_postgres:
+  quickhire_models:

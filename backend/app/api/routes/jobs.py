@@ -9,6 +9,7 @@ from app.models.entities import Application, AuditEvent, Job, UserRole
 from app.schemas.api import JobCreate, JobRead, JobStatusUpdate
 from app.services.ai_policy import PolicyViolation, require_job_related_text
 from app.services.notifications import queue_notification
+from app.services.knowledge_retrieval import replace_job_chunks
 
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -69,13 +70,24 @@ async def create_job(
     job = Job(recruiter_id=identity["sub"], **payload.model_dump(mode="json"))
     db.add(job)
     await db.flush()
+    chunk_count = await replace_job_chunks(
+        db,
+        job_id=job.id,
+        title=job.title,
+        description=job.description,
+        requirements=job.requirements,
+    )
     db.add(
         AuditEvent(
             actor_id=identity["sub"],
             action="job_created",
             resource_type="job",
             resource_id=job.id,
-            details={"status": job.status, "requirement_count": len(job.requirements)},
+            details={
+                "status": job.status,
+                "requirement_count": len(job.requirements),
+                "knowledge_chunk_count": chunk_count,
+            },
         )
     )
     await db.commit()

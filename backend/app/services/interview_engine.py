@@ -3,9 +3,10 @@ from collections import defaultdict
 
 from app.services.ai_policy import safe_requirements
 
-MODEL_VERSION = "structured-interview-0.2.0"
+MODEL_VERSION = "structured-interview-0.6.0"
 NOTICE = (
-    "This mock interview evaluates typed answer content against disclosed job-related criteria. "
+    "This mock interview evaluates editable answer text against disclosed job-related criteria. "
+    "Optional audio is used only to create an editable transcript and is immediately discarded. "
     "It does not analyze face, voice, accent, emotion, personality, disability or honesty, and it cannot make a hiring decision."
 )
 
@@ -41,7 +42,7 @@ def build_interview(requirements: list[dict], limit: int = 5) -> list[dict]:
 
 
 def public_questions(questions: list[dict]) -> list[dict]:
-    fields = {"id", "competency", "prompt", "evaluation_criteria"}
+    fields = {"id", "competency", "prompt", "evaluation_criteria", "evidence_citations"}
     return [{key: value for key, value in question.items() if key in fields} for question in questions]
 
 

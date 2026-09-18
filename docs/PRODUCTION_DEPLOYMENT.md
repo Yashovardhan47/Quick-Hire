@@ -16,6 +16,8 @@ Provision these before launch:
 
 The Google client must authorize the exact production frontend origin. Add both the frontend and API domains to the provider configuration as appropriate; never use wildcard origins.
 
+For optional neural retrieval or transcription, choose reviewed provider endpoints or a host with enough CPU/GPU, memory and model storage for the private `ai-worker` profile. Review model licenses and pin approved revisions before launch.
+
 ## 2. Configure secrets
 
 ```bash
@@ -49,9 +51,20 @@ Create the first controlled platform administrator after the services are health
 
 ```bash
 docker compose --env-file .env.production -f docker-compose.production.yml exec backend python -m app.cli.create_admin
+docker compose --env-file .env.production -f docker-compose.production.yml exec backend python -m app.cli.reindex_knowledge
 ```
 
 Candidates and recruiters may register with password or Google. Google can never create an administrator.
+
+### Optional private neural worker
+
+Set a long random `AI_API_KEY`, point the embedding, reranking and transcription URLs at `http://ai-worker:8100`, and start the private profile:
+
+```bash
+docker compose --env-file .env.production -f docker-compose.production.yml --profile private-ai up -d --build
+```
+
+Set `EXTERNAL_MODEL_DATA_PROCESSING_ENABLED=true` only after consent, retention and model review. Set `VOICE_TRANSCRIPTION_ENABLED=true` only when the transcription endpoint is healthy. Audio is sent for transcription only after candidate consent and is not stored by QuickHire or the private worker.
 
 ## 5. Verify the full workflow
 
@@ -68,6 +81,9 @@ Use separate candidate and recruiter test accounts and verify:
 9. `/health/ready` reports the database and Redis as available.
 10. A clean resume passes ClamAV, an EICAR test file is rejected, and a scan-only PDF fails closed with an accessible-file instruction.
 11. External embedding/reranking remains unused for a candidate until that candidate explicitly opts in, and revocation returns active matches to local processing.
+12. Interview questions show retrieved source locators and a deliberately injected document instruction cannot alter the system policy.
+13. If voice transcription is enabled, the candidate can edit the transcript and the audit event confirms that audio was discarded and no audio feature reached evaluation.
+14. Recruiter-copilot searches are confined to the selected recruiter-owned job and cannot change an application stage.
 
 ## 6. Backups and recovery
 
@@ -120,4 +136,4 @@ Deploy immutable commit tags. For an update: build, back up, run migrations, sta
 
 ## Decision boundary
 
-QuickHire may organize and summarize job-related evidence. It cannot autonomously reject, shortlist, offer, hire, or change an application stage. Interview feedback uses typed answer content only and cannot evaluate appearance, voice, accent, emotion, personality, disability, honesty, or protected/sensitive traits.
+QuickHire may organize and summarize job-related evidence. It cannot autonomously reject, shortlist, offer, hire, or change an application stage. Interview feedback uses editable answer text only. Optional audio creates text and is discarded before evaluation. The system cannot evaluate appearance, voice, accent, emotion, personality, disability, honesty, or protected/sensitive traits.

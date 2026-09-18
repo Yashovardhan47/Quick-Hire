@@ -49,6 +49,7 @@ Protected attributes may be used only in separated, access-controlled audit data
 9. **Implemented 0.5:** interview scheduling, communication, notifications, email delivery, recruiter assistance, appeals and accommodations
 10. **Implemented 0.5 infrastructure:** versioned migrations, production containers, automatic TLS, health checks, malware scanning and deployment runbook
 11. **Launch evidence still required:** representative model validation, penetration testing, jurisdiction-specific legal review and independent fairness audits
+12. **Implemented 0.6:** pgvector knowledge chunks, HNSW retrieval, citation-grounded RAG, five auditable specialist agents, conversational recruiter tools and transcript-only optional voice access
 
 ## 0.4 authentication and enforcement
 
@@ -64,7 +65,7 @@ Protected attributes may be used only in separated, access-controlled audit data
 - `talent_intelligence.py` normalizes resume and job text into a controlled skill taxonomy. Resume claims are unverified until supported by platform or human-reviewed evidence.
 - `evidence_graph.py` connects weighted job requirements to evidence and returns fit, confidence, an uncertainty interval, gaps and next-best verification actions.
 - `assessment_engine.py` selects objective questions for low-coverage competencies. Unknown competencies are routed to human review and excluded from automated scores.
-- `interview_engine.py` creates structured questions and checks typed answers for disclosed context, action, result and reflection criteria. Output is practice feedback and requires human review.
+- `interview_engine.py` creates structured questions and checks editable answer text for disclosed context, action, result and reflection criteria. Optional speech is transcribed and discarded before this stage. Output is practice feedback and requires human review.
 - `application_workflow.py` enforces valid pipeline transitions. Every recruiter transition records a reason, stage-history row and audit event.
 - Authenticated WebSockets notify the relevant user after committed workflow events.
 

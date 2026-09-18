@@ -40,9 +40,15 @@ class Settings(BaseSettings):
     ai_api_key: str | None = None
     external_model_data_processing_enabled: bool = False
     embedding_api_url: str | None = None
-    embedding_model: str = "multilingual-embedding-model"
+    embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     reranker_api_url: str | None = None
-    reranker_model: str = "cross-encoder-reranker"
+    reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    llm_api_url: str | None = None
+    llm_model: str = "gpt-4.1-mini"
+    transcription_api_url: str | None = None
+    transcription_model: str = "whisper-1"
+    voice_transcription_enabled: bool = False
+    max_interview_audio_bytes: int = Field(default=10_485_760, ge=1_048_576, le=26_214_400)
     ai_request_timeout_seconds: float = 8.0
     max_resume_bytes: int = 5_242_880
     max_resume_pages: int = 30

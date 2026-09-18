@@ -19,6 +19,8 @@ type Metrics = {
   pending_email_deliveries: number;
   failed_email_deliveries: number;
   open_candidate_requests: number;
+  knowledge_chunks: number;
+  agent_runs: number;
   model_version: string;
   evaluation_state: string;
 };
@@ -76,6 +78,7 @@ export default function AdminDashboard() {
           { label: "Applications", value: metrics.applications },
           { label: "Messages", value: metrics.messages },
           { label: "Interviews", value: metrics.scheduled_interviews },
+          { label: "Agent runs", value: metrics.agent_runs },
         ] : []} />
       </div>
       <div className="content-grid">
@@ -86,12 +89,14 @@ export default function AdminDashboard() {
           <div className="audit-row"><span>Active guardrail policy</span><strong>{policy?.version ?? "Loading"}</strong></div>
           <div className="audit-row"><span>Completed mock interviews</span><strong>{metrics?.completed_mock_interviews ?? "—"}</strong></div>
           <div className="audit-row"><span>Recorded audit events</span><strong>{metrics?.audit_events ?? "—"}</strong></div>
+          <div className="audit-row"><span>Vector knowledge chunks</span><strong>{metrics?.knowledge_chunks ?? "—"}</strong></div>
+          <div className="audit-row"><span>Audited specialist-agent runs</span><strong>{metrics?.agent_runs ?? "—"}</strong></div>
           <div className="audit-row"><span>Messages / scheduled interviews</span><strong>{metrics ? `${metrics.messages} / ${metrics.scheduled_interviews}` : "—"}</strong></div>
           <div className="audit-row"><span>Email outbox pending / failed</span><strong>{metrics ? `${metrics.pending_email_deliveries} / ${metrics.failed_email_deliveries}` : "—"}</strong></div>
         </article>
         <article className="panel">
           <span className="eyebrow">DECISION CONTROLS</span><h3>Enforced in this milestone</h3>
-          <ul className="check-list"><li>Autonomous stage changes are disabled server-side</li><li>Human evidence review, confirmation and reason are required</li><li>Recruiters can access only applications for their jobs</li><li>Assessment answers are hidden until submission</li><li>Mock interviews use typed content and disclosed rubrics only</li></ul>
+          <ul className="check-list"><li>Autonomous stage changes are disabled server-side</li><li>Human evidence review, confirmation and reason are required</li><li>Recruiters can access only applications for their jobs</li><li>Assessment answers are hidden until submission</li><li>Mock interviews evaluate editable answer text only; optional audio is discarded after transcription</li></ul>
         </article>
       </div>
       <div className="content-grid governance-row">
