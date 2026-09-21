@@ -24,6 +24,8 @@ The 0.5 production workflow remains available:
 - Rotating opaque refresh sessions in strict, HTTP-only cookies
 - Refresh-token hashes only in the database, with account-wide replay revocation
 - Password registration and sign-in for candidates, recruiters and controlled admins
+- Role-locked onboarding and workspaces: Job Seeker, Recruiter or invitation-only Platform Admin
+- Server-authoritative role restoration on every application load, with cross-role routes redirected and APIs denied
 - Single-use email verification and password recovery with session revocation
 - Backend-verified Google Identity Services sign-in for candidates and recruiters
 - Google identities bound to the stable `sub` claim; no silent email-based account linking
@@ -97,11 +99,13 @@ python -m app.cli.reindex_knowledge
 
 The browser credential is always sent to the backend for signature, audience, issuer and verified-email checks. Google sign-in can never create or link a platform-admin account.
 
-Candidates and recruiters can register in the interface. To create the first platform administrator, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env`, then run:
+Job seekers and recruiters can self-register in the interface and are sent only to their selected perspective. Create the first platform administrator by setting `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env`, then run:
 
 ```bash
 docker compose exec backend python -m app.cli.create_admin
 ```
+
+That administrator can create an email-bound, single-use invitation from the Admin dashboard. The invited person selects **Admin** on the same registration page and uses the invitation token. Google cannot create or link administrator accounts, roles cannot be changed from the browser, and backend authorization remains the enforcement boundary.
 
 Production databases are created and upgraded by `python -m app.cli.migrate`; do not edit an applied migration. Development can still create the current SQLAlchemy schema automatically.
 

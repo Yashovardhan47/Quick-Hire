@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from app.models.entities import ApplicationStatus, UserRole
 
@@ -11,7 +11,16 @@ class UserCreate(BaseModel):
     email: EmailStr
     full_name: str = Field(min_length=2, max_length=160)
     password: str = Field(min_length=10, max_length=128)
-    role: Literal[UserRole.candidate, UserRole.recruiter]
+    role: UserRole
+    admin_invite_token: str | None = Field(default=None, min_length=32, max_length=500)
+
+    @model_validator(mode="after")
+    def validate_role_authorization(self):
+        if self.role == UserRole.admin and not self.admin_invite_token:
+            raise ValueError("An administrator invitation is required for admin registration")
+        if self.role != UserRole.admin and self.admin_invite_token:
+            raise ValueError("Administrator invitations can only create admin accounts")
+        return self
 
 
 class UserRead(BaseModel):
@@ -51,6 +60,19 @@ class AuthMethodsRead(BaseModel):
     password_enabled: bool
     google_linked: bool
     email_verified: bool
+
+
+class AdminInviteCreate(BaseModel):
+    email: EmailStr
+    expires_in_hours: int = Field(default=48, ge=1, le=168)
+
+
+class AdminInviteIssued(BaseModel):
+    email: EmailStr
+    expires_at: datetime
+    invite_token: str
+    signup_url: str
+    notice: Literal["single_use_email_bound_admin_invitation"] = "single_use_email_bound_admin_invitation"
 
 
 class EmailActionRequest(BaseModel):

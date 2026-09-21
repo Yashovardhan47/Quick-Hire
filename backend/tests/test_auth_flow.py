@@ -6,9 +6,10 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.api.routes import auth as auth_routes
 from app.core.config import get_settings
+from app.core.security import hash_password
 from app.db.session import get_db
 from app.main import app
-from app.models.entities import Base, Notification, RefreshSession, User
+from app.models.entities import AdminInvite, Base, Notification, RefreshSession, User, UserRole
 from app.services.google_identity import GoogleIdentity
 
 
@@ -139,6 +140,130 @@ async def test_google_cannot_silently_link_or_create_admin_and_explicit_link_suc
     assert logged_out.status_code == 204
     after_logout = await client.post("/api/v1/auth/refresh")
     assert after_logout.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_selected_role_controls_api_perspective_and_admin_registration_is_invited(auth_client) -> None:
+    client, session_factory = auth_client
+
+    uninvited = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "uninvited-admin@example.com",
+            "full_name": "Uninvited Admin",
+            "password": "strong-password-123",
+            "role": "admin",
+        },
+    )
+    assert uninvited.status_code == 422
+
+    async with session_factory() as db:
+        bootstrap = User(
+            email="bootstrap-admin@example.com",
+            full_name="Bootstrap Admin",
+            password_hash=hash_password("bootstrap-password-123"),
+            role=UserRole.admin,
+            email_verified=True,
+        )
+        db.add(bootstrap)
+        await db.commit()
+
+    bootstrap_login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "bootstrap-admin@example.com", "password": "bootstrap-password-123"},
+    )
+    bootstrap_token = bootstrap_login.json()["access_token"]
+    bootstrap_headers = {"Authorization": f"Bearer {bootstrap_token}"}
+    issued = await client.post(
+        "/api/v1/admin/invites",
+        headers=bootstrap_headers,
+        json={"email": "invited-admin@example.com", "expires_in_hours": 24},
+    )
+    assert issued.status_code == 201
+    invite_token = issued.json()["invite_token"]
+    assert "role=admin" in issued.json()["signup_url"]
+
+    wrong_email = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "wrong-admin@example.com",
+            "full_name": "Wrong Admin",
+            "password": "strong-password-123",
+            "role": "admin",
+            "admin_invite_token": invite_token,
+        },
+    )
+    assert wrong_email.status_code == 403
+
+    admin_registration = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "invited-admin@example.com",
+            "full_name": "Invited Admin",
+            "password": "strong-password-123",
+            "role": "admin",
+            "admin_invite_token": invite_token,
+        },
+    )
+    assert admin_registration.status_code == 201
+    assert admin_registration.json()["user"]["role"] == "admin"
+    admin_headers = {"Authorization": f"Bearer {admin_registration.json()['access_token']}"}
+    assert (await client.get("/api/v1/auth/me", headers=admin_headers)).json()["role"] == "admin"
+    assert (await client.get("/api/v1/admin/metrics", headers=admin_headers)).status_code == 200
+    assert (await client.get("/api/v1/candidates/me/profile", headers=admin_headers)).status_code == 403
+
+    reused = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "another-admin@example.com",
+            "full_name": "Another Admin",
+            "password": "strong-password-123",
+            "role": "admin",
+            "admin_invite_token": invite_token,
+        },
+    )
+    assert reused.status_code == 403
+    async with session_factory() as db:
+        invite = await db.scalar(select(AdminInvite).where(AdminInvite.email == "invited-admin@example.com"))
+        assert invite is not None and invite.used_at is not None
+        assert invite.token_hash != invite_token
+
+    candidate = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "role-candidate@example.com",
+            "full_name": "Role Candidate",
+            "password": "strong-password-123",
+            "role": "candidate",
+        },
+    )
+    candidate_headers = {"Authorization": f"Bearer {candidate.json()['access_token']}"}
+    assert candidate.json()["user"]["role"] == "candidate"
+    assert (await client.get("/api/v1/candidates/me/profile", headers=candidate_headers)).status_code == 200
+    assert (await client.get("/api/v1/jobs/mine", headers=candidate_headers)).status_code == 403
+    assert (await client.get("/api/v1/admin/metrics", headers=candidate_headers)).status_code == 403
+    assert (
+        await client.post(
+            "/api/v1/admin/invites",
+            headers=candidate_headers,
+            json={"email": "forbidden-admin@example.com", "expires_in_hours": 24},
+        )
+    ).status_code == 403
+
+    recruiter = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "role-recruiter@example.com",
+            "full_name": "Role Recruiter",
+            "password": "strong-password-123",
+            "role": "recruiter",
+        },
+    )
+    recruiter_headers = {"Authorization": f"Bearer {recruiter.json()['access_token']}"}
+    assert recruiter.json()["user"]["role"] == "recruiter"
+    assert (await client.get("/api/v1/jobs/mine", headers=recruiter_headers)).status_code == 200
+    assert (await client.get("/api/v1/candidates/me/profile", headers=recruiter_headers)).status_code == 403
+    assert (await client.get("/api/v1/admin/metrics", headers=recruiter_headers)).status_code == 403
 
 
 @pytest.mark.asyncio

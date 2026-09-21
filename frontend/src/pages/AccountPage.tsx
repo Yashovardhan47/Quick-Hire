@@ -107,7 +107,7 @@ export default function AccountPage() {
           <h3>People own every consequential decision</h3>
           <ul className="check-list">
             <li>No autonomous rejection, shortlisting, offer or hiring</li>
-            <li>Typed interview answers only, against a disclosed job rubric</li>
+            <li>Editable interview answer text only, against a disclosed job rubric</li>
             <li>No appearance, voice, accent, emotion, personality, disability or honesty scoring</li>
             <li>Protected and sensitive signals are blocked before ranking</li>
             <li>Every recruiter stage change needs evidence review, confirmation and a reason</li>

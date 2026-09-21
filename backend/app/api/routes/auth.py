@@ -16,7 +16,7 @@ from app.core.security import (
     verify_password,
 )
 from app.db.session import get_db
-from app.models.entities import AuthActionToken, AuditEvent, CandidateProfile, RefreshSession, User, UserRole, utcnow
+from app.models.entities import AdminInvite, AuthActionToken, AuditEvent, CandidateProfile, RefreshSession, User, UserRole, utcnow
 from app.schemas.api import (
     AuthMethodsRead,
     EmailActionRequest,
@@ -147,6 +147,25 @@ async def register(payload: UserCreate, response: Response, _: None = Depends(en
     existing = await db.scalar(select(User).where(User.email == email))
     if existing:
         raise HTTPException(status_code=409, detail="Email already registered")
+    admin_invite = None
+    if payload.role == UserRole.admin:
+        admin_invite = await db.scalar(
+            select(AdminInvite)
+            .where(AdminInvite.token_hash == hash_action_token(payload.admin_invite_token or ""))
+            .with_for_update()
+        )
+        inviter = await db.get(User, admin_invite.created_by) if admin_invite else None
+        if (
+            admin_invite is None
+            or admin_invite.email != email
+            or admin_invite.used_at is not None
+            or admin_invite.revoked_at is not None
+            or _is_expired(admin_invite.expires_at)
+            or inviter is None
+            or not inviter.is_active
+            or inviter.role != UserRole.admin
+        ):
+            raise HTTPException(status_code=403, detail="Administrator invitation is invalid, expired, used, or issued for another email")
     user = User(
         email=email,
         full_name=payload.full_name.strip(),
@@ -156,6 +175,8 @@ async def register(payload: UserCreate, response: Response, _: None = Depends(en
     )
     db.add(user)
     await db.flush()
+    if admin_invite is not None:
+        admin_invite.used_at = utcnow()
     if user.role == UserRole.candidate:
         db.add(CandidateProfile(user_id=user.id))
     db.add(
@@ -164,7 +185,11 @@ async def register(payload: UserCreate, response: Response, _: None = Depends(en
             action="account_created",
             resource_type="user",
             resource_id=user.id,
-            details={"provider": "password", "role": user.role.value},
+            details={
+                "provider": "password",
+                "role": user.role.value,
+                "admin_invite_id": admin_invite.id if admin_invite else None,
+            },
         )
     )
     token_response, _ = await _issue_session(user, response, db)

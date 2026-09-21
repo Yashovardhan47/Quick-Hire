@@ -1,13 +1,18 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy import func, select
+from datetime import UTC, datetime, timedelta
+from urllib.parse import urlencode
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import require_roles
+from app.api.dependencies import require_verified_roles
 from app.api.routes.realtime import manager
 from app.core.config import get_settings
+from app.core.security import generate_action_token, hash_action_token
 from app.db.session import get_db
 from app.models.entities import (
     Application,
+    AdminInvite,
     AgentRun,
     AssessmentAttempt,
     AuditEvent,
@@ -22,8 +27,9 @@ from app.models.entities import (
     NotificationDelivery,
     User,
     UserRole,
+    utcnow,
 )
-from app.schemas.api import AIPolicyRead, PlatformMetrics
+from app.schemas.api import AdminInviteCreate, AdminInviteIssued, AIPolicyRead, PlatformMetrics
 from app.services.ai_policy import policy_manifest
 from app.services.semantic_matching import MODEL_VERSION
 
@@ -31,9 +37,56 @@ from app.services.semantic_matching import MODEL_VERSION
 router = APIRouter(prefix="/admin", tags=["platform governance"])
 
 
+@router.post("/invites", response_model=AdminInviteIssued, status_code=201)
+async def issue_admin_invite(
+    payload: AdminInviteCreate,
+    identity: dict = Depends(require_verified_roles(UserRole.admin)),
+    db: AsyncSession = Depends(get_db),
+) -> AdminInviteIssued:
+    email = payload.email.lower()
+    if await db.scalar(select(User).where(User.email == email)):
+        raise HTTPException(status_code=409, detail="An account already uses this email")
+    await db.execute(
+        update(AdminInvite)
+        .where(
+            AdminInvite.email == email,
+            AdminInvite.used_at.is_(None),
+            AdminInvite.revoked_at.is_(None),
+        )
+        .values(revoked_at=utcnow())
+    )
+    raw_token = generate_action_token()
+    expires_at = datetime.now(UTC) + timedelta(hours=payload.expires_in_hours)
+    invite = AdminInvite(
+        email=email,
+        token_hash=hash_action_token(raw_token),
+        created_by=identity["sub"],
+        expires_at=expires_at,
+    )
+    db.add(invite)
+    await db.flush()
+    db.add(
+        AuditEvent(
+            actor_id=identity["sub"],
+            action="admin_invitation_issued",
+            resource_type="admin_invite",
+            resource_id=invite.id,
+            details={"expires_at": expires_at.isoformat(), "single_use": True, "email_bound": True},
+        )
+    )
+    await db.commit()
+    query = urlencode({"mode": "register", "role": "admin", "invite": raw_token, "email": email})
+    return AdminInviteIssued(
+        email=email,
+        expires_at=expires_at,
+        invite_token=raw_token,
+        signup_url=f"{get_settings().public_frontend_url.rstrip('/')}/login?{query}",
+    )
+
+
 @router.get("/ai-policy", response_model=AIPolicyRead)
 async def active_ai_policy(
-    _: dict = Depends(require_roles(UserRole.admin)),
+    _: dict = Depends(require_verified_roles(UserRole.admin)),
 ) -> AIPolicyRead:
     return AIPolicyRead.model_validate(policy_manifest())
 
@@ -47,7 +100,7 @@ async def _count(db: AsyncSession, model, *conditions) -> int:
 
 @router.get("/metrics", response_model=PlatformMetrics)
 async def platform_metrics(
-    _: dict = Depends(require_roles(UserRole.admin)),
+    _: dict = Depends(require_verified_roles(UserRole.admin)),
     db: AsyncSession = Depends(get_db),
 ) -> PlatformMetrics:
     settings = get_settings()

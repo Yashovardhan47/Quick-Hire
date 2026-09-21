@@ -1,18 +1,21 @@
 import { FormEvent, useCallback, useState } from "react";
-import { BrainCircuit, ShieldCheck, Sparkles } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { BrainCircuit, BriefcaseBusiness, ShieldCheck, Sparkles, UserRoundSearch } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import GoogleIdentityButton from "../components/GoogleIdentityButton";
-import { api, saveSession, Session, UserRole } from "../lib/api";
-
-const homeFor = (role: UserRole) => `/${role}`;
+import { api, saveSession, Session } from "../lib/api";
+import { homeForRole, SignupRole } from "../lib/roles";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [searchParams] = useSearchParams();
+  const requestedRole = searchParams.get("role");
+  const initialRole: SignupRole = requestedRole === "recruiter" || requestedRole === "admin" ? requestedRole : "candidate";
+  const [mode, setMode] = useState<"login" | "register">(searchParams.get("mode") === "register" ? "register" : "login");
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"candidate" | "recruiter">("candidate");
+  const [role, setRole] = useState<SignupRole>(initialRole);
+  const [adminInvite, setAdminInvite] = useState(searchParams.get("invite") ?? "");
   const [error, setError] = useState("");
   const [working, setWorking] = useState(false);
   const [forgot, setForgot] = useState(false);
@@ -33,10 +36,10 @@ export default function LoginPage() {
     try {
       const payload = mode === "login"
         ? { email, password }
-        : { email, password, full_name: fullName, role };
+        : { email, password, full_name: fullName, role, admin_invite_token: role === "admin" ? adminInvite : undefined };
       const session = await api<Session>(`/auth/${mode}`, { method: "POST", body: JSON.stringify(payload) });
       saveSession(session);
-      navigate(homeFor(session.user.role));
+      navigate(homeForRole(session.user.role));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to continue");
     } finally {
@@ -53,7 +56,7 @@ export default function LoginPage() {
         body: JSON.stringify({ credential, mode, role: mode === "register" ? role : null }),
       });
       saveSession(session);
-      navigate(homeFor(session.user.role));
+      navigate(homeForRole(session.user.role));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Google sign-in failed");
     } finally {
@@ -83,18 +86,19 @@ export default function LoginPage() {
               <label>Full name<input value={fullName} onChange={event => setFullName(event.target.value)} minLength={2} required /></label>
               <fieldset className="role-picker">
                 <legend>Account type</legend>
-                <button type="button" className={role === "candidate" ? "selected" : ""} onClick={() => setRole("candidate")}>Job seeker</button>
-                <button type="button" className={role === "recruiter" ? "selected" : ""} onClick={() => setRole("recruiter")}>Recruiter</button>
+                <button type="button" className={role === "candidate" ? "selected" : ""} aria-pressed={role === "candidate"} onClick={() => setRole("candidate")}><UserRoundSearch size={18} /><span><strong>Job seeker</strong><small>Find, apply and improve</small></span></button>
+                <button type="button" className={role === "recruiter" ? "selected" : ""} aria-pressed={role === "recruiter"} onClick={() => setRole("recruiter")}><BriefcaseBusiness size={18} /><span><strong>Recruiter</strong><small>Post and review jobs</small></span></button>
+                <button type="button" className={role === "admin" ? "selected" : ""} aria-pressed={role === "admin"} onClick={() => setRole("admin")}><ShieldCheck size={18} /><span><strong>Admin</strong><small>Invitation required</small></span></button>
               </fieldset>
+              {role === "admin" && <><div className="inline-notice admin-access-note"><ShieldCheck size={17} /> Admin selection opens only the governance perspective and requires a single-use invitation from an existing platform administrator.</div><label>Administrator invitation<input type="password" autoComplete="one-time-code" value={adminInvite} onChange={event => setAdminInvite(event.target.value)} minLength={32} required /></label></>}
             </>
           )}
           <label>Email<input type="email" value={email} onChange={event => setEmail(event.target.value)} required /></label>
           <label>Password<input type="password" value={password} onChange={event => setPassword(event.target.value)} minLength={10} required /></label>
           {error && <div className="form-error" role="alert">{error}</div>}
           <button className="primary wide" disabled={working}>{working ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}</button>
-          <div className="auth-divider"><span>or</span></div>
-          {!working && <GoogleIdentityButton onCredential={continueWithGoogle} text={mode === "login" ? "signin_with" : "signup_with"} />}
-          <p className="auth-safety-note">Google accounts can create job-seeker or recruiter access only. Platform-admin access remains separately controlled.</p>
+          {(mode === "login" || role !== "admin") && <><div className="auth-divider"><span>or</span></div>{!working && <GoogleIdentityButton onCredential={continueWithGoogle} text={mode === "login" ? "signin_with" : "signup_with"} />}</>}
+          <p className="auth-safety-note">Your stored role is authoritative: every sign-in returns only that role's routes, navigation and API permissions. Google registration supports job seekers and recruiters; admin registration is invitation-only.</p>
           <button type="button" className="text-button auth-switch" onClick={() => setMode(mode === "login" ? "register" : "login")}>
             {mode === "login" ? "New to QuickHire? Create an account" : "Already have an account? Sign in"}
           </button>

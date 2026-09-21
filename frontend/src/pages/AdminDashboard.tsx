@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Activity, ClipboardCheck, Scale, ShieldAlert, UsersRound, Waypoints } from "lucide-react";
+import { FormEvent, useEffect, useState } from "react";
+import { Activity, ClipboardCheck, Copy, Scale, ShieldAlert, UserPlus, UsersRound, Waypoints } from "lucide-react";
 import { api } from "../lib/api";
 import LiveBarChart from "../components/LiveBarChart";
 
@@ -27,6 +27,8 @@ type Metrics = {
 
 type CandidateRequest = { id: string; candidate_id: string; request_type: string; details: string; status: string; resolution: string; created_at: string };
 
+type AdminInvite = { email: string; expires_at: string; invite_token: string; signup_url: string; notice: string };
+
 type AIPolicy = {
   version: string;
   decision_authority: string;
@@ -42,6 +44,11 @@ export default function AdminDashboard() {
   const [error, setError] = useState("");
   const [requests, setRequests] = useState<CandidateRequest[]>([]);
   const [resolution, setResolution] = useState<Record<string, string>>({});
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteHours, setInviteHours] = useState(48);
+  const [invite, setInvite] = useState<AdminInvite | null>(null);
+  const [inviteNotice, setInviteNotice] = useState("");
+  const [issuingInvite, setIssuingInvite] = useState(false);
 
   useEffect(() => {
     Promise.all([api<Metrics>("/admin/metrics"), api<AIPolicy>("/admin/ai-policy"), api<CandidateRequest[]>("/candidate-requests")])
@@ -57,6 +64,28 @@ export default function AdminDashboard() {
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to update request"); }
   }
 
+  async function issueInvite(event: FormEvent) {
+    event.preventDefault();
+    setIssuingInvite(true); setError(""); setInviteNotice("");
+    try {
+      const issued = await api<AdminInvite>("/admin/invites", {
+        method: "POST",
+        body: JSON.stringify({ email: inviteEmail, expires_in_hours: inviteHours }),
+      });
+      setInvite(issued);
+      setInviteNotice("Invitation created. Share this link only with the intended administrator; it is shown once and works only for that email.");
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to create administrator invitation"); }
+    finally { setIssuingInvite(false); }
+  }
+
+  async function copyInvite() {
+    if (!invite) return;
+    try {
+      await navigator.clipboard.writeText(invite.signup_url);
+      setInviteNotice("Administrator signup link copied.");
+    } catch { setError("Copy was blocked by the browser. Select and copy the visible link manually."); }
+  }
+
   return (
     <section className="workspace">
       <div className="section-heading">
@@ -70,6 +99,17 @@ export default function AdminDashboard() {
         <article><ClipboardCheck /><strong>{metrics?.candidate_documents ?? "—"}</strong><span>Resume documents</span></article>
         <article><Activity /><strong>{metrics?.live_connections ?? "—"}</strong><span>Live connections</span></article>
       </div>
+      <article className="panel admin-invite-panel">
+        <div className="subheading"><div><span className="eyebrow">ROLE-CONTROLLED ONBOARDING</span><h3>Invite another platform administrator</h3></div><UserPlus /></div>
+        <p className="muted">Job seekers and recruiters may choose their role during normal registration. Admin registration requires this email-bound, single-use link and never uses Google self-registration.</p>
+        <form onSubmit={issueInvite}>
+          <label>Administrator email<input type="email" value={inviteEmail} onChange={event => setInviteEmail(event.target.value)} required /></label>
+          <label>Valid for (hours)<input type="number" min={1} max={168} value={inviteHours} onChange={event => setInviteHours(Number(event.target.value))} required /></label>
+          <button className="primary" disabled={issuingInvite}>{issuingInvite ? "Creating…" : "Create secure invitation"}</button>
+        </form>
+        {inviteNotice && <div className="inline-notice" role="status">{inviteNotice}</div>}
+        {invite && <div className="invite-result"><div><strong>{invite.email}</strong><small>Expires {new Date(invite.expires_at).toLocaleString()}</small><input aria-label="Administrator signup link" readOnly value={invite.signup_url} onFocus={event => event.currentTarget.select()} /></div><button className="secondary" type="button" onClick={() => void copyInvite()}><Copy size={16} /> Copy link</button></div>}
+      </article>
       <div className="analytics-grid admin-analytics">
         <LiveBarChart title="Platform activity" description="Live database totals for operations monitoring; values refresh whenever this workspace is opened." data={metrics ? [
           { label: "Candidates", value: metrics.candidates },

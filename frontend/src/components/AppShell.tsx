@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Bell, Bot, BrainCircuit, BriefcaseBusiness, CalendarClock, KeyRound, LogOut, MessageCircle, ShieldCheck, UserRoundSearch } from "lucide-react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { api, eventSocketUrl, getSession, logoutSession } from "../lib/api";
+import { ROLE_PERSPECTIVES } from "../lib/roles";
 
 const roleLinks = {
   candidate: [
@@ -105,7 +106,7 @@ export default function AppShell() {
       <main>
         <header className="topbar">
           <div>
-            <span className="eyebrow">{user?.role.toUpperCase()} WORKSPACE</span>
+            <span className="eyebrow">{user ? ROLE_PERSPECTIVES[user.role].workspace.toUpperCase() : "SECURE WORKSPACE"}</span>
             <h1>{user?.full_name}</h1>
           </div>
           <div className="notification-wrap">

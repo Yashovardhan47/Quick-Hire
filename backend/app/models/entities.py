@@ -83,6 +83,21 @@ class AuthActionToken(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class AdminInvite(Base):
+    """Single-use, email-bound authorization for creating a platform administrator."""
+
+    __tablename__ = "admin_invites"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    email: Mapped[str] = mapped_column(String(320), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    created_by: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class CandidateProfile(Base):
     __tablename__ = "candidate_profiles"
 

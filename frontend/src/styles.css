@@ -165,10 +165,15 @@ textarea { min-height: 128px; resize: vertical; line-height: 1.5; }
 .google-button { min-height: 44px; display: grid; place-items: center; overflow: hidden; }
 .google-config-note, .auth-safety-note { color: #748198 !important; font-size: .8rem; line-height: 1.45; text-align: center; }
 .auth-safety-note { margin-top: -5px !important; }
-.role-picker { padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: 0; }
+.role-picker { padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; border: 0; }
 .role-picker legend { margin-bottom: 7px; color: #33415c; font-size: .9rem; font-weight: 700; }
-.role-picker button { padding: 11px; border: 1px solid #cfd8e7; border-radius: 9px; background: white; color: #43516a; cursor: pointer; }
+.role-picker button { min-height: 84px; padding: 11px 8px; display: grid; justify-items: center; align-content: center; gap: 6px; border: 1px solid #cfd8e7; border-radius: 9px; background: white; color: #43516a; cursor: pointer; }
+.role-picker button span { display: grid; gap: 2px; }
+.role-picker button small { color: #7a8799; font-size: .69rem; font-weight: 500; }
 .role-picker button.selected { color: #086555; background: #e9f8f4; border-color: #69bbaa; }
+.role-picker button.selected small { color: #39786d; }
+.admin-access-note { display: flex; gap: 8px; align-items: flex-start; }
+.admin-access-note svg { flex: 0 0 auto; }
 
 .focused-workspace { max-width: 920px; margin: 0 auto; }
 .back-link { margin-bottom: 24px; display: inline-flex; gap: 7px; align-items: center; color: #53637d; text-decoration: none; font-weight: 700; }
@@ -424,8 +429,8 @@ textarea { min-height: 128px; resize: vertical; line-height: 1.5; }
 @media (max-width: 760px) { .landing-nav { height: auto; padding-top: 14px; padding-bottom: 14px; } .landing-nav > div { display: none; } .landing-hero { min-height: auto; padding-top: 70px; padding-bottom: 70px; } .landing-hero-copy h1 { font-size: 3.3rem; } .landing-search { grid-template-columns: auto 1fr; } .landing-search button { grid-column: 1 / -1; justify-content: center; } .landing-job-grid, .workspace-cards, .explanation-flow { grid-template-columns: 1fr; } .explanation-flow > svg { margin: 0 auto; transform: rotate(90deg); } .landing-section { padding: 75px 20px; } .landing-heading, .landing-cta, .landing-footer { align-items: flex-start; flex-direction: column; } .landing-cta { margin: 20px 20px 70px; padding: 32px 25px; } }
 
 @media (max-width: 1180px) { .pipeline-layout { grid-template-columns: 1fr; } .evidence-drawer { position: static; } }
-@media (max-width: 980px) { .metric-grid { grid-template-columns: repeat(2, 1fr); } .content-grid, .stack-grid, .resume-input-grid, .account-grid, .message-layout, .assistant-layout { grid-template-columns: 1fr; } .stack-grid .next-action { position: static; } .auth-story h1 { font-size: 3rem; } .conversation-list { max-height: 330px; overflow-y: auto; } }
-@media (max-width: 720px) { .app-shell { grid-template-columns: 1fr; } .sidebar { position: static; height: auto; } .sidebar nav { grid-template-columns: repeat(2, 1fr); } .sidebar nav a { justify-content: center; font-size: .8rem; } .decision-note { display: none; } .topbar, .workspace { padding-left: 20px; padding-right: 20px; } .section-heading, .review-banner, .form-footer { align-items: flex-start; flex-direction: column; } .auth-page { grid-template-columns: 1fr; } .auth-story { min-height: 380px; gap: 50px; } .auth-form-wrap { padding: 35px 22px; } .kanban { grid-template-columns: repeat(3, 260px); } .schedule-list, .request-admin-row { grid-template-columns: 1fr; } .recourse-panel form { grid-template-columns: 1fr; } .recourse-panel form button { grid-column: 1; } }
+@media (max-width: 980px) { .metric-grid { grid-template-columns: repeat(2, 1fr); } .content-grid, .stack-grid, .resume-input-grid, .account-grid, .message-layout, .assistant-layout, .admin-invite-panel form { grid-template-columns: 1fr; } .stack-grid .next-action { position: static; } .auth-story h1 { font-size: 3rem; } .conversation-list { max-height: 330px; overflow-y: auto; } }
+@media (max-width: 720px) { .app-shell { grid-template-columns: 1fr; } .sidebar { position: static; height: auto; } .sidebar nav { grid-template-columns: repeat(2, 1fr); } .sidebar nav a { justify-content: center; font-size: .8rem; } .decision-note { display: none; } .topbar, .workspace { padding-left: 20px; padding-right: 20px; } .section-heading, .review-banner, .form-footer, .invite-result { align-items: flex-start; flex-direction: column; } .invite-result { align-items: stretch; } .role-picker { grid-template-columns: 1fr; } .auth-page { grid-template-columns: 1fr; } .auth-story { min-height: 380px; gap: 50px; } .auth-form-wrap { padding: 35px 22px; } .kanban { grid-template-columns: repeat(3, 260px); } .schedule-list, .request-admin-row { grid-template-columns: 1fr; } .recourse-panel form { grid-template-columns: 1fr; } .recourse-panel form button { grid-column: 1; } }
 
 .voice-tools { margin: 14px 0 10px; flex-wrap: wrap; }
 .voice-tools button { display: inline-flex; align-items: center; gap: 7px; }
@@ -442,4 +447,11 @@ textarea { min-height: 128px; resize: vertical; line-height: 1.5; }
 .copilot-candidates article { display: grid; gap: 7px; padding: 14px; border: 1px solid #dce4ef; border-radius: 13px; background: #fbfdff; }
 .copilot-candidates article > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .copilot-candidates p, .copilot-candidates small { margin: 0; }
+.admin-invite-panel { margin: 22px 0; }
+.admin-invite-panel form { display: grid; grid-template-columns: minmax(220px, 1fr) 160px auto; gap: 12px; align-items: end; }
+.admin-invite-panel form button { min-height: 46px; }
+.invite-result { margin-top: 14px; padding: 14px; display: flex; gap: 14px; align-items: end; border: 1px solid #b9ded5; border-radius: 12px; background: #f1faf8; }
+.invite-result > div { flex: 1; min-width: 0; display: grid; gap: 6px; }
+.invite-result small { color: #66768c; }
+.invite-result input { font-family: monospace; font-size: .78rem; }
 @media (max-width: 480px) { .metric-grid { grid-template-columns: 1fr; } .evidence-columns, .two-fields { grid-template-columns: 1fr; } .ranking-signals { grid-template-columns: repeat(2, 1fr); } .workspace { padding-top: 25px; } .auth-story h1 { font-size: 2.45rem; } .bar-row { grid-template-columns: 92px minmax(80px, 1fr) 46px; gap: 8px; } }

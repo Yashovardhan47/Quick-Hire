@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppShell from "./components/AppShell";
 import { ensureActiveSession, getSession, UserRole } from "./lib/api";
+import { homeForRole } from "./lib/roles";
 import AccountPage from "./pages/AccountPage";
 import AuthActionPage from "./pages/AuthActionPage";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -18,7 +19,7 @@ import RecruiterDashboard from "./pages/RecruiterDashboard";
 
 function RoleHome() {
   const role = getSession()?.user.role;
-  return <Navigate to={role ? `/${role}` : "/login"} replace />;
+  return <Navigate to={role ? homeForRole(role) : "/login"} replace />;
 }
 
 function RoleRoute({ allowed, children }: { allowed: UserRole[]; children: React.ReactNode }) {

@@ -92,7 +92,21 @@ export async function ensureActiveSession(): Promise<Session | null> {
   if (session) {
     try {
       const payload = JSON.parse(atob(session.access_token.split(".")[1])) as { exp?: number; token_type?: string };
-      if (payload.token_type === "access" && (payload.exp ?? 0) * 1000 > Date.now() + 15_000) return session;
+      if (payload.token_type === "access" && (payload.exp ?? 0) * 1000 > Date.now() + 15_000) {
+        const response = await fetch(`${API_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          credentials: "include",
+        });
+        if (response.ok) {
+          const user = await response.json() as SessionUser;
+          const authoritative = { ...session, user };
+          saveSession(authoritative);
+          return authoritative;
+        }
+        if (response.status === 401) return refreshSession();
+        clearSession();
+        return null;
+      }
     } catch { /* Refresh malformed or legacy access tokens. */ }
   }
   return refreshSession();

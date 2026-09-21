@@ -56,6 +56,8 @@ docker compose --env-file .env.production -f docker-compose.production.yml exec 
 
 Candidates and recruiters may register with password or Google. Google can never create an administrator.
 
+After the first controlled administrator signs in, use the Admin dashboard to issue subsequent administrator invitations. Each link is single-use, expires in at most seven days, is bound to one email address and stores only a token hash. Test that each account is redirected to—and can call APIs only for—its Job Seeker, Recruiter or Platform Admin perspective.
+
 ### Optional private neural worker
 
 Set a long random `AI_API_KEY`, point the embedding, reranking and transcription URLs at `http://ai-worker:8100`, and start the private profile:
