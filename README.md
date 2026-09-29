@@ -2,6 +2,12 @@
 
 QuickHire EvidenceGraph is the AI-first evolution of Quick-Hire. It connects job requirements to verifiable candidate evidence from profiles, projects, assessments and structured interviews. AI produces transparent recommendations with confidence and missing-evidence explanations; a human recruiter remains responsible for employment decisions.
 
+## Live interactive review
+
+Open the latest role-scoped demo at [quickhire-evidencegraph-demo.kummarayashovardhan.chatgpt.site](https://quickhire-evidencegraph-demo.kummarayashovardhan.chatgpt.site).
+
+The deployable review source is versioned in [`review-demo/`](review-demo/README.md). It uses isolated sample data and lets reviewers inspect the Job Seeker, Recruiter and invitation-only Admin perspectives. The production React application remains in `frontend/` and is connected to the FastAPI, PostgreSQL, Redis and AI services.
+
 ## Evidence-grounded agent release · 0.6
 
 - Sanitized resume and job chunks stored as 384-dimensional `pgvector` records
@@ -116,6 +122,7 @@ By default, hybrid retrieval runs locally and candidate text is not sent to an e
 ```bash
 cd backend && PYTHONPATH=. pytest -q
 cd frontend && npm run build
+cd review-demo && npm run build
 ```
 
 Evaluate a labeled JSONL ranking dataset with:

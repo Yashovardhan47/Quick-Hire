@@ -1,6 +1,6 @@
 # QuickHire production deployment
 
-This runbook deploys the real FastAPI, React, PostgreSQL, Redis, WebSocket, migration, and notification-worker stack. The public review Site remains a product demo until it is pointed at this deployed API.
+This runbook deploys the real FastAPI, React, PostgreSQL, Redis, WebSocket, migration, and notification-worker stack. The public review Site remains an isolated product demo until it is pointed at this deployed API; its exact source is versioned in `review-demo/` and built independently in CI.
 
 ## 1. Account-owned prerequisites
 
