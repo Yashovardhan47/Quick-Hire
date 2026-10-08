@@ -64,6 +64,14 @@ async function errorMessage(response: Response): Promise<string> {
   return "Request failed";
 }
 
+function decodeAccessTokenPayload(token: string): { exp?: number; token_type?: string } {
+  const encoded = token.split(".")[1];
+  if (!encoded) throw new Error("Malformed access token");
+  const base64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+  return JSON.parse(atob(padded)) as { exp?: number; token_type?: string };
+}
+
 export function refreshSession(): Promise<Session | null> {
   if (refreshInFlight) return refreshInFlight;
   refreshInFlight = (async () => {
@@ -91,7 +99,7 @@ export async function ensureActiveSession(): Promise<Session | null> {
   const session = getSession();
   if (session) {
     try {
-      const payload = JSON.parse(atob(session.access_token.split(".")[1])) as { exp?: number; token_type?: string };
+      const payload = decodeAccessTokenPayload(session.access_token);
       if (payload.token_type === "access" && (payload.exp ?? 0) * 1000 > Date.now() + 15_000) {
         const response = await fetch(`${API_URL}/auth/me`, {
           headers: { Authorization: `Bearer ${session.access_token}` },

@@ -12,6 +12,7 @@ from app.core.config import get_settings
 
 password_hash = PasswordHash.recommended()
 dummy_password_hash = password_hash.hash("quickhire-invalid-password-placeholder")
+ALLOWED_ACCESS_ROLES = {"candidate", "recruiter", "admin"}
 
 
 def hash_password(password: str) -> str:
@@ -23,7 +24,7 @@ def verify_password(password: str, hashed_password: str | None) -> bool:
     return bool(hashed_password) and valid
 
 
-def create_access_token(subject: str, role: str, session_id: str | None = None) -> str:
+def create_access_token(subject: str, role: str, session_id: str) -> str:
     settings = get_settings()
     now = datetime.now(UTC)
     payload = {
@@ -36,8 +37,7 @@ def create_access_token(subject: str, role: str, session_id: str | None = None) 
         "iat": now,
         "exp": now + timedelta(minutes=settings.access_token_minutes),
     }
-    if session_id:
-        payload["sid"] = session_id
+    payload["sid"] = session_id
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
 
 
@@ -50,10 +50,31 @@ def decode_access_token(token: str) -> dict:
             algorithms=["HS256"],
             audience=settings.jwt_audience,
             issuer=settings.jwt_issuer,
-            options={"require": ["sub", "role", "token_type", "iat", "exp"]},
+            options={
+                "require": [
+                    "sub",
+                    "role",
+                    "token_type",
+                    "jti",
+                    "sid",
+                    "iss",
+                    "aud",
+                    "iat",
+                    "exp",
+                ]
+            },
         )
-        if payload.get("token_type") != "access":
-            raise jwt.InvalidTokenError("Unexpected token type")
+        if (
+            payload.get("token_type") != "access"
+            or payload.get("role") not in ALLOWED_ACCESS_ROLES
+            or not isinstance(payload.get("sub"), str)
+            or not payload["sub"]
+            or not isinstance(payload.get("sid"), str)
+            or not payload["sid"]
+            or not isinstance(payload.get("jti"), str)
+            or not payload["jti"]
+        ):
+            raise jwt.InvalidTokenError("Unexpected access-token contract")
         return payload
     except jwt.PyJWTError as exc:
         raise HTTPException(

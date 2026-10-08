@@ -43,12 +43,16 @@ export default function GoogleIdentityButton({
 
   useEffect(() => {
     activeCredentialHandler = onCredential;
+    setUnavailable(false);
     if (!clientId) {
       setUnavailable(true);
       return () => { activeCredentialHandler = null; };
     }
     let attempts = 0;
+    let cancelled = false;
+    let retryTimer = 0;
     const render = () => {
+      if (cancelled) return;
       if (window.google && container.current) {
         initializeGoogle(clientId);
         if (initializedClientId !== clientId) {
@@ -67,11 +71,13 @@ export default function GoogleIdentityButton({
         return;
       }
       attempts += 1;
-      if (attempts < 80) window.setTimeout(render, 100);
+      if (attempts < 80) retryTimer = window.setTimeout(render, 100);
       else setUnavailable(true);
     };
     render();
     return () => {
+      cancelled = true;
+      window.clearTimeout(retryTimer);
       if (activeCredentialHandler === onCredential) activeCredentialHandler = null;
     };
   }, [clientId, onCredential, text]);

@@ -27,6 +27,8 @@ def test_non_access_jwt_cannot_be_used_as_an_access_token() -> None:
             "sub": "candidate-1",
             "role": "candidate",
             "token_type": "refresh",
+            "jti": "refresh-token-id",
+            "sid": "session-1",
             "iss": settings.jwt_issuer,
             "aud": settings.jwt_audience,
             "iat": now,
@@ -35,6 +37,39 @@ def test_non_access_jwt_cannot_be_used_as_an_access_token() -> None:
         settings.secret_key,
         algorithm="HS256",
     )
+
+    with pytest.raises(HTTPException, match="Invalid or expired"):
+        decode_access_token(token)
+
+
+@pytest.mark.parametrize(
+    ("removed_claim", "role"),
+    [
+        ("sid", "candidate"),
+        ("jti", "candidate"),
+        (None, "superuser"),
+    ],
+)
+def test_access_token_rejects_incomplete_or_unknown_authorization_contract(
+    removed_claim: str | None,
+    role: str,
+) -> None:
+    settings = get_settings()
+    now = datetime.now(UTC)
+    payload = {
+        "sub": "candidate-1",
+        "role": role,
+        "token_type": "access",
+        "jti": "access-token-id",
+        "sid": "session-1",
+        "iss": settings.jwt_issuer,
+        "aud": settings.jwt_audience,
+        "iat": now,
+        "exp": now + timedelta(minutes=5),
+    }
+    if removed_claim:
+        payload.pop(removed_claim)
+    token = jwt.encode(payload, settings.secret_key, algorithm="HS256")
 
     with pytest.raises(HTTPException, match="Invalid or expired"):
         decode_access_token(token)

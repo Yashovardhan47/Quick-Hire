@@ -143,6 +143,47 @@ async def test_google_cannot_silently_link_or_create_admin_and_explicit_link_suc
 
 
 @pytest.mark.asyncio
+async def test_google_only_registration_and_repeat_login_keep_the_original_role(auth_client) -> None:
+    client, session_factory = auth_client
+    credential = "test-google-credential-" * 8
+
+    registered = await client.post(
+        "/api/v1/auth/google",
+        json={"credential": credential, "mode": "register", "role": "candidate"},
+    )
+    assert registered.status_code == 200
+    registered_user = registered.json()["user"]
+    assert registered_user["role"] == "candidate"
+    assert registered_user["email_verified"] is True
+    assert registered_user["google_linked"] is True
+    access_token = registered.json()["access_token"]
+    candidate_headers = {"Authorization": f"Bearer {access_token}"}
+    assert (await client.get("/api/v1/candidates/me/profile", headers=candidate_headers)).status_code == 200
+    assert (await client.get("/api/v1/jobs/mine", headers=candidate_headers)).status_code == 403
+
+    password_attempt = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "candidate@example.com", "password": "strong-password-123"},
+    )
+    assert password_attempt.status_code == 401
+
+    assert (await client.post("/api/v1/auth/logout")).status_code == 204
+    logged_in = await client.post(
+        "/api/v1/auth/google",
+        json={"credential": credential, "mode": "login", "role": "recruiter"},
+    )
+    assert logged_in.status_code == 200
+    assert logged_in.json()["user"]["id"] == registered_user["id"]
+    assert logged_in.json()["user"]["role"] == "candidate"
+
+    async with session_factory() as db:
+        users = list(await db.scalars(select(User)))
+        assert len(users) == 1
+        assert users[0].password_hash is None
+        assert users[0].google_subject == "stable-google-subject"
+
+
+@pytest.mark.asyncio
 async def test_selected_role_controls_api_perspective_and_admin_registration_is_invited(auth_client) -> None:
     client, session_factory = auth_client
 
