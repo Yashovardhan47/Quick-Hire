@@ -8,6 +8,8 @@ It mirrors the public product experience with isolated sample data so reviewers 
 
 ## Review behavior
 
+- The public main interface remains visible before authentication and explains the complete product.
+- Entering a review role now lands on a separate role-specific home before the detailed dashboard.
 - The selected signup perspective is locked for the session.
 - Navigation and workflows are restricted to that role.
 - Cross-role URLs return the reviewer to the authorized workspace.

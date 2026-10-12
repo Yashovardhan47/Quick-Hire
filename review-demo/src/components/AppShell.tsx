@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { BarChart3, Bell, Bot, BrainCircuit, BriefcaseBusiness, CalendarDays, ClipboardList, Home, LayoutDashboard, LockKeyhole, LogOut, MessageSquareText, Search, ShieldCheck } from "lucide-react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import GoogleAuthButton, { disableGoogleAutoSelect } from "./GoogleAuthButton";
 import OnboardingTour from "./OnboardingTour";
 import {
@@ -27,6 +27,7 @@ import {
 
 const linksByRole = {
   candidate: [
+    { to: "/candidate/home", label: "Home", icon: Home },
     { to: "/candidate", label: "My dashboard", icon: LayoutDashboard },
     { to: "/jobs", label: "Find jobs", icon: Search },
     { to: "/candidate/applications", label: "Applications", icon: ClipboardList },
@@ -34,12 +35,14 @@ const linksByRole = {
     { to: "/candidate/messages", label: "Messages", icon: MessageSquareText },
   ],
   recruiter: [
+    { to: "/recruiter/home", label: "Home", icon: Home },
     { to: "/recruiter", label: "Jobs & applicants", icon: BriefcaseBusiness },
     { to: "/recruiter/assistant", label: "AI recruiter assistant", icon: Bot },
     { to: "/recruiter/interviews", label: "Interviews", icon: CalendarDays },
     { to: "/recruiter/messages", label: "Messages", icon: MessageSquareText },
   ],
   admin: [
+    { to: "/admin/home", label: "Home", icon: Home },
     { to: "/admin", label: "Platform controls", icon: BarChart3 },
   ],
 };
@@ -113,7 +116,7 @@ export default function AppShell() {
   async function logout() {
     await logoutSession();
     disableGoogleAutoSelect();
-    navigate("/login");
+    navigate("/");
   }
 
   function markAllRead() {
@@ -125,15 +128,12 @@ export default function AppShell() {
     <div className="app-shell">
       {user && <OnboardingTour role={user.role} />}
       <aside className="sidebar">
-        <div className="brand"><BrainCircuit size={24} /> <span>QuickHire</span></div>
+        <Link className="brand sidebar-brand" to={user ? `/${user.role}/home` : "/"}><BrainCircuit size={24} /> <span>QuickHire</span></Link>
         <p className="brand-note">Jobs + recruiting</p>
-        <nav className="platform-nav" aria-label="Platform navigation">
-          <NavLink to="/"><Home size={18} /> Home</NavLink>
-        </nav>
         <span className="sidebar-label">{user ? roleLabels[user.role] : "Workspace"}</span>
         <nav aria-label="Workspace navigation">
           {visibleLinks.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} className={({ isActive }) => isActive ? "active" : ""}>
+            <NavLink key={to} to={to} end={["/candidate", "/recruiter", "/admin"].includes(to)} className={({ isActive }) => isActive ? "active" : ""}>
               <Icon size={18} /> {label}
             </NavLink>
           ))}

@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useState } from "react";
-import { BrainCircuit, BriefcaseBusiness, ShieldCheck, Sparkles, UserRoundSearch } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, BrainCircuit, BriefcaseBusiness, ShieldCheck, Sparkles, UserRoundSearch } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import GoogleIdentityButton from "../components/GoogleIdentityButton";
 import { api, saveSession, Session } from "../lib/api";
 import { homeForRole, SignupRole } from "../lib/roles";
@@ -67,7 +67,10 @@ export default function LoginPage() {
   return (
     <main className="auth-page">
       <section className="auth-story">
-        <div className="brand"><BrainCircuit size={28} /> <span>QuickHire</span></div>
+        <div className="auth-story-top">
+          <Link className="brand auth-brand" to="/"><BrainCircuit size={28} /> <span>QuickHire</span></Link>
+          <Link className="auth-overview-link" to="/"><ArrowLeft size={15} /> Project overview</Link>
+        </div>
         <div>
           <span className="eyebrow mint">EVIDENCEGRAPH</span>
           <h1>Hiring intelligence that shows its work.</h1>

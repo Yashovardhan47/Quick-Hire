@@ -1,10 +1,10 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { BrainCircuit, BriefcaseBusiness, Fingerprint, KeyRound, LockKeyhole, RefreshCw, ShieldCheck, Sparkles, UserRoundSearch } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, BrainCircuit, BriefcaseBusiness, Fingerprint, KeyRound, LockKeyhole, RefreshCw, ShieldCheck, Sparkles, UserRoundSearch } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import GoogleAuthButton from "../components/GoogleAuthButton";
 import { api, AuthConfig, getSession, isDemoMode, refreshSession, saveSession, Session, startDemoSession, UserRole } from "../lib/api";
 
-const homeFor = (role: UserRole) => `/${role}`;
+const homeFor = (role: UserRole) => `/${role}/home`;
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -84,7 +84,7 @@ export default function LoginPage() {
     return (
       <main className="auth-page demo-auth-page">
         <section className="auth-story">
-          <div className="brand"><BrainCircuit size={28} /> <span>QuickHire</span></div>
+          <div className="auth-story-top"><Link className="brand auth-brand" to="/"><BrainCircuit size={28} /> <span>QuickHire</span></Link><Link className="auth-overview-link" to="/"><ArrowLeft size={15} /> Project overview</Link></div>
           <div>
             <span className="eyebrow mint">QUICKHIRE REVIEW</span>
             <h1>Find jobs, understand your match, and recruit responsibly.</h1>
@@ -131,7 +131,7 @@ export default function LoginPage() {
   return (
     <main className="auth-page">
       <section className="auth-story">
-        <div className="brand"><BrainCircuit size={28} /> <span>QuickHire</span></div>
+        <div className="auth-story-top"><Link className="brand auth-brand" to="/"><BrainCircuit size={28} /> <span>QuickHire</span></Link><Link className="auth-overview-link" to="/"><ArrowLeft size={15} /> Project overview</Link></div>
         <div>
           <span className="eyebrow mint">QUICKHIRE</span>
           <h1>One account for job search and responsible recruiting.</h1>

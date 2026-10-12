@@ -8,6 +8,14 @@ Open the latest role-scoped demo at [quickhire-evidencegraph-demo.kummarayashova
 
 The deployable review source is versioned in [`review-demo/`](review-demo/README.md). It uses isolated sample data and lets reviewers inspect the Job Seeker, Recruiter and invitation-only Admin perspectives. The production React application remains in `frontend/` and is connected to the FastAPI, PostgreSQL, Redis and AI services.
 
+## Interface flow
+
+- `/` is the public main interface. It explains the complete product, shows live published jobs, the narrated demo, EvidenceGraph in plain language, and the three available perspectives.
+- Password or Google authentication redirects to the server-authoritative account role: `/candidate/home`, `/recruiter/home`, or `/admin/home`.
+- Each authenticated home is a role-specific daily overview built from current API data. It is intentionally different from the public project interface.
+- Detailed work continues in the protected candidate opportunities, recruiter jobs/applicants, and administrator governance screens.
+- Signing out returns to the public main interface. Cross-role routes remain blocked by both the frontend and API authorization layer.
+
 ## Evidence-grounded agent release · 0.6
 
 - Sanitized resume and job chunks stored as 384-dimensional `pgvector` records
@@ -42,6 +50,7 @@ The 0.5 production workflow remains available:
 - Explicit human evidence review, confirmation and reasoning for every recruiter stage change
 - Admin-visible, versioned employment-AI policy
 - Public animated product interface with the narrated 24-second overview
+- Separate role-specific authenticated home pages with live priorities, metrics, interviews, notifications and database-derived analytics
 - Live published-job marketplace (no hard-coded production jobs)
 - Animated candidate, recruiter and admin analytics derived only from current database records
 - Persistent candidate/recruiter messages with authorization boundaries

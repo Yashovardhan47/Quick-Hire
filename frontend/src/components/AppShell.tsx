@@ -1,22 +1,27 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, Bot, BrainCircuit, BriefcaseBusiness, CalendarClock, KeyRound, LogOut, MessageCircle, ShieldCheck, UserRoundSearch } from "lucide-react";
+import { Bell, Bot, BrainCircuit, BriefcaseBusiness, CalendarClock, House, KeyRound, LogOut, MessageCircle, ShieldCheck, UserRoundSearch } from "lucide-react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { api, eventSocketUrl, getSession, logoutSession } from "../lib/api";
 import { ROLE_PERSPECTIVES } from "../lib/roles";
 
 const roleLinks = {
   candidate: [
+    { to: "/candidate/home", label: "Home", icon: House },
     { to: "/candidate", label: "Opportunities", icon: UserRoundSearch },
     { to: "/candidate/messages", label: "Messages", icon: MessageCircle },
     { to: "/candidate/interviews", label: "Interviews", icon: CalendarClock },
   ],
   recruiter: [
+    { to: "/recruiter/home", label: "Home", icon: House },
     { to: "/recruiter", label: "Jobs & applicants", icon: BriefcaseBusiness },
     { to: "/recruiter/assistant", label: "AI assistant", icon: Bot },
     { to: "/recruiter/messages", label: "Messages", icon: MessageCircle },
     { to: "/recruiter/interviews", label: "Interviews", icon: CalendarClock },
   ],
-  admin: [{ to: "/admin", label: "Governance", icon: ShieldCheck }],
+  admin: [
+    { to: "/admin/home", label: "Home", icon: House },
+    { to: "/admin", label: "Governance", icon: ShieldCheck },
+  ],
 };
 
 type StoredNotification = { id: string; title: string; body: string; created_at: string; read_at: string | null };
@@ -82,17 +87,17 @@ export default function AppShell() {
 
   async function logout() {
     await logoutSession();
-    navigate("/login");
+    navigate("/");
   }
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand"><BrainCircuit size={24} /> <span>QuickHire</span></div>
+        <Link className="brand sidebar-brand" to={user ? ROLE_PERSPECTIVES[user.role].home : "/"}><BrainCircuit size={24} /> <span>QuickHire</span></Link>
         <p className="brand-note">EvidenceGraph</p>
-        <nav aria-label="Dashboard previews">
+        <nav aria-label="Workspace navigation">
           {visibleLinks.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} className={({ isActive }) => isActive ? "active" : ""}>
+            <NavLink key={to} to={to} end={["/candidate", "/recruiter", "/admin"].includes(to)} className={({ isActive }) => isActive ? "active" : ""}>
               <Icon size={18} /> {label}
             </NavLink>
           ))}

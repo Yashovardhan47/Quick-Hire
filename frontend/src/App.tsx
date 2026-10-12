@@ -16,6 +16,7 @@ import LoginPage from "./pages/LoginPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import RecruiterAssistantPage from "./pages/RecruiterAssistantPage";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
+import WorkspaceHomePage from "./pages/WorkspaceHomePage";
 
 function RoleHome() {
   const role = getSession()?.user.role;
@@ -45,17 +46,20 @@ export default function App() {
       <Route path="/login" element={getSession() ? <RoleHome /> : <LoginPage />} />
       <Route path="/verify-email" element={<AuthActionPage action="verify" />} />
       <Route path="/reset-password" element={<AuthActionPage action="reset" />} />
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={getSession() ? <RoleHome /> : <LandingPage />} />
       <Route element={<AppShell />}>
+        <Route path="candidate/home" element={<RoleRoute allowed={["candidate"]}><WorkspaceHomePage /></RoleRoute>} />
         <Route path="candidate" element={<RoleRoute allowed={["candidate"]}><CandidateDashboard /></RoleRoute>} />
         <Route path="candidate/assessment/:jobId" element={<RoleRoute allowed={["candidate"]}><CandidateAssessment /></RoleRoute>} />
         <Route path="candidate/interview/:jobId" element={<RoleRoute allowed={["candidate"]}><CandidateInterview /></RoleRoute>} />
         <Route path="candidate/messages" element={<RoleRoute allowed={["candidate"]}><CommunicationsPage /></RoleRoute>} />
         <Route path="candidate/interviews" element={<RoleRoute allowed={["candidate"]}><InterviewSchedulePage /></RoleRoute>} />
+        <Route path="recruiter/home" element={<RoleRoute allowed={["recruiter"]}><WorkspaceHomePage /></RoleRoute>} />
         <Route path="recruiter" element={<RoleRoute allowed={["recruiter"]}><RecruiterDashboard /></RoleRoute>} />
         <Route path="recruiter/assistant" element={<RoleRoute allowed={["recruiter"]}><RecruiterAssistantPage /></RoleRoute>} />
         <Route path="recruiter/messages" element={<RoleRoute allowed={["recruiter"]}><CommunicationsPage /></RoleRoute>} />
         <Route path="recruiter/interviews" element={<RoleRoute allowed={["recruiter"]}><InterviewSchedulePage /></RoleRoute>} />
+        <Route path="admin/home" element={<RoleRoute allowed={["admin"]}><WorkspaceHomePage /></RoleRoute>} />
         <Route path="admin" element={<RoleRoute allowed={["admin"]}><AdminDashboard /></RoleRoute>} />
         <Route path="notifications" element={<RoleRoute allowed={["candidate", "recruiter", "admin"]}><NotificationsPage /></RoleRoute>} />
         <Route path="account" element={<RoleRoute allowed={["candidate", "recruiter", "admin"]}><AccountPage /></RoleRoute>} />
