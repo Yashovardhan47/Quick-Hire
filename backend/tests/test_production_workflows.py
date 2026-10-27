@@ -6,10 +6,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.api.routes.recruiter_assistant import assist_recruiter
+from app.api.routes.matching import match_me, recruiter_match
 from app.api.routes.jobs import get_job, list_jobs
 from app.models.entities import (
     Application,
     Base,
+    CandidateProfile,
     Job,
     Notification,
     NotificationDelivery,
@@ -132,6 +134,72 @@ async def test_public_marketplace_never_exposes_unpublished_jobs() -> None:
         with pytest.raises(HTTPException) as caught:
             await get_job(draft.id, db)
         assert caught.value.status_code == 404
+    await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_matching_requires_a_published_job_and_an_owned_application() -> None:
+    engine = create_async_engine("sqlite+aiosqlite://")
+    sessions = async_sessionmaker(engine, expire_on_commit=False)
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+    async with sessions() as db:
+        recruiter = User(email="owner@example.com", full_name="Owner", role=UserRole.recruiter)
+        other_recruiter = User(email="other@example.com", full_name="Other", role=UserRole.recruiter)
+        candidate = User(email="candidate@example.com", full_name="Candidate", role=UserRole.candidate)
+        db.add_all([recruiter, other_recruiter, candidate])
+        await db.flush()
+        db.add(CandidateProfile(user_id=candidate.id, skills=["Python"]))
+        published = Job(
+            recruiter_id=recruiter.id,
+            title="Published role",
+            company="Example",
+            description="Build and operate measurable Python services.",
+            requirements=[{"name": "Python", "weight": 1, "mandatory": True}],
+            status="published",
+        )
+        draft = Job(
+            recruiter_id=recruiter.id,
+            title="Confidential draft",
+            company="Example",
+            description="A confidential Python role that is not published.",
+            requirements=[{"name": "Python", "weight": 1, "mandatory": True}],
+            status="draft",
+        )
+        db.add_all([published, draft])
+        await db.flush()
+
+        with pytest.raises(HTTPException) as hidden_draft:
+            await match_me(draft.id, {"sub": candidate.id, "role": "candidate"}, db)
+        assert hidden_draft.value.status_code == 404
+
+        with pytest.raises(HTTPException) as no_application:
+            await recruiter_match(
+                published.id,
+                candidate.id,
+                {"sub": recruiter.id, "role": "recruiter"},
+                db,
+            )
+        assert no_application.value.status_code == 404
+
+        db.add(Application(job_id=published.id, candidate_id=candidate.id))
+        await db.commit()
+        result = await recruiter_match(
+            published.id,
+            candidate.id,
+            {"sub": recruiter.id, "role": "recruiter"},
+            db,
+        )
+        assert result.requirements[0].requirement == "Python"
+
+        with pytest.raises(HTTPException) as wrong_owner:
+            await recruiter_match(
+                published.id,
+                candidate.id,
+                {"sub": other_recruiter.id, "role": "recruiter"},
+                db,
+            )
+        assert wrong_owner.value.status_code == 404
     await engine.dispose()
 
 

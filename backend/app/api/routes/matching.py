@@ -78,6 +78,9 @@ async def match_me(
     identity: dict = Depends(require_roles(UserRole.candidate)),
     db: AsyncSession = Depends(get_db),
 ) -> MatchResult:
+    job = await db.get(Job, job_id)
+    if job is None or job.status != "published":
+        raise HTTPException(status_code=404, detail="Published job not found")
     return await compute_match(job_id, identity["sub"], db)
 
 
@@ -91,4 +94,12 @@ async def recruiter_match(
     job = await db.get(Job, job_id)
     if not job or (identity["role"] != UserRole.admin.value and job.recruiter_id != identity["sub"]):
         raise HTTPException(status_code=404, detail="Job not found")
+    application = await db.scalar(
+        select(Application).where(
+            Application.job_id == job_id,
+            Application.candidate_id == candidate_id,
+        )
+    )
+    if application is None:
+        raise HTTPException(status_code=404, detail="Candidate application not found")
     return await compute_match(job_id, candidate_id, db)
