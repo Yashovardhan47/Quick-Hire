@@ -29,7 +29,9 @@ jobs:
       - name: Compile optional private AI worker
         run: python -m compileall -q ../ai-worker/app
       - name: Test private AI worker boundary
-        run: PYTHONPATH=../ai-worker python -m pytest -q ../ai-worker/tests
+        run: |
+          cd ../ai-worker
+          PYTHONPATH=. python -m pytest -q tests
 
   frontend:
     runs-on: ubuntu-latest
