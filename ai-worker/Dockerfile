@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.15-slim
 
 ENV HF_HOME=/models/huggingface \
     XDG_CACHE_HOME=/models/cache
